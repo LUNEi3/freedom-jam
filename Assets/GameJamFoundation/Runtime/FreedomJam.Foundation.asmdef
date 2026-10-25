@@ -1,0 +1,5 @@
+{
+  "name": "FreedomJam.Foundation",
+  "rootNamespace": "FreedomJam.Foundation",
+  "references": ["Unity.InputSystem", "UnityEngine.UI"]
+}

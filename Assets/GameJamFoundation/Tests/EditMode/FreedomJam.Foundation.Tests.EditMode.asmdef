@@ -1,0 +1,6 @@
+{
+  "name": "FreedomJam.Foundation.Tests.EditMode",
+  "references": ["FreedomJam.Foundation", "Unity.InputSystem", "UnityEngine.UI"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
