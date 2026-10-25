@@ -65,11 +65,11 @@
 - `GameState` is `Menu`, `Playing`, `Paused`, or `Result`.
 - `Advance` returns `true` only on the first tick that expires a configured countdown; elapsed mode never auto-completes.
 
-- [ ] **Step 1: Write failing EditMode tests** named `NewRun_UsesConfiguredDefaults`, `ElapsedTimer_AccumulatesPositiveDelta`, `Countdown_AdvancePastZero_ClampsAndCompletesOnce`, `AddScore_AllowsNegativeDelta`, and `Complete_CannotCompleteTwice`.
-- [ ] **Step 2: Run the EditMode tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform EditMode -testResults "Temp/foundation-editmode.xml" -quit`; expected: the new tests fail because the model does not exist.
-- [ ] **Step 3: Implement `GameConfig`, `TimerMode`, `ScoreDirection`, and `GameRunData`** with safe defaults and nonnegative timer deltas.
-- [ ] **Step 4: Run the EditMode tests**; expected: all five tests pass.
-- [ ] **Step 5: Commit** `git add Assets/GameJamFoundation/Runtime Assets/GameJamFoundation/Tests/EditMode` then `git commit -m "feat: add game run model"`.
+- [x] **Step 1: Write failing EditMode tests** named `NewRun_UsesConfiguredDefaults`, `ElapsedTimer_AccumulatesPositiveDelta`, `Countdown_AdvancePastZero_ClampsAndCompletesOnce`, `AddScore_AllowsNegativeDelta`, and `Complete_CannotCompleteTwice`.
+- [x] **Step 2: Run the EditMode tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform EditMode -testResults "Temp/foundation-editmode.xml" -quit`; expected: the new tests fail because the model does not exist.
+- [x] **Step 3: Implement `GameConfig`, `TimerMode`, `ScoreDirection`, and `GameRunData`** with safe defaults and nonnegative timer deltas.
+- [x] **Step 4: Run the EditMode tests**; expected: all five tests pass.
+- [x] **Step 5: Commit** `git add Assets/GameJamFoundation/Runtime Assets/GameJamFoundation/Tests/EditMode` then `git commit -m "feat: add game run model"`.
 
 ### Task 2: Settings and best-score persistence
 
@@ -83,11 +83,11 @@
 - `SettingsStore.LoadSettings(GameSettings defaults) -> GameSettings` and `SaveSettings(GameSettings settings) -> void` persist preferences.
 - `SettingsStore.LoadBestScore(string key, int fallback, ScoreDirection direction) -> int` and `TryRecordBestScore(string key, int candidate, int fallback, ScoreDirection direction) -> bool` implement per-game best score behavior; if no value is saved, the first completed run becomes the best regardless of score direction.
 
-- [ ] **Step 1: Write failing EditMode tests** named `Settings_RoundTripPersistsAllValues`, `InvalidOrMissingData_ReturnsDefaults`, and `BestScore_UsesConfiguredDirectionAndDefault`; assert round-trip values, safe fallback, and higher/lower comparisons.
-- [ ] **Step 2: Run those tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform EditMode -testResults "Temp/foundation-editmode.xml" -quit`; expected: FAIL because persistence APIs do not exist.
-- [ ] **Step 3: Implement `GameSettings` and `SettingsStore`** using namespaced PlayerPrefs keys, JSON for grouped settings, and a separate key per configured best score.
-- [ ] **Step 4: Run those tests**; expected: PASS, with PlayerPrefs keys cleaned after each test.
-- [ ] **Step 5: Commit** `git add Assets/GameJamFoundation/Runtime/Settings Assets/GameJamFoundation/Tests/EditMode/SettingsStoreTests.cs` then `git commit -m "feat: persist game settings and best score"`.
+- [x] **Step 1: Write failing EditMode tests** named `Settings_RoundTripPersistsAllValues`, `InvalidOrMissingData_ReturnsDefaults`, and `BestScore_UsesConfiguredDirectionAndDefault`; assert round-trip values, safe fallback, and higher/lower comparisons.
+- [x] **Step 2: Run those tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform EditMode -testResults "Temp/foundation-editmode.xml" -quit`; expected: FAIL because persistence APIs do not exist.
+- [x] **Step 3: Implement `GameSettings` and `SettingsStore`** using namespaced PlayerPrefs keys, JSON for grouped settings, and a separate key per configured best score.
+- [x] **Step 4: Run those tests**; expected: PASS, with PlayerPrefs keys cleaned after each test.
+- [x] **Step 5: Commit** `git add Assets/GameJamFoundation/Runtime/Settings Assets/GameJamFoundation/Tests/EditMode/SettingsStoreTests.cs` then `git commit -m "feat: persist game settings and best score"`.
 
 ### Task 3: PC input actions and rebinding
 
@@ -104,11 +104,11 @@
 - `GameInputController.Initialize(InputActionAsset asset) -> void` exposes `event Action PausePressed` and `SetGameplayState(GameState state) -> void`; it enables Player only while Playing and System/Pause while Playing or Paused. UI map actions remain managed by `InputSystemUIInputModule`.
 - The rebinding list includes bindings in `Player` and `System` only; each composite part is a separate selectable binding. Keyboard&Mouse and Gamepad are the supported schemes.
 
-- [ ] **Step 1: Write failing EditMode tests** named `RebindableBindings_IncludePlayerAndSystemOnly`, `CompositeOverride_RoundTripsAndResetRestoresDefault`, `SavedOverrides_LoadAfterServiceRecreation`, and `GameplayState_EnablesExpectedMaps`; assert scope, persistence, reset, and map context using an in-memory `InputActionAsset`.
-- [ ] **Step 2: Run those tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform EditMode -testResults "Temp/foundation-editmode.xml" -quit`; expected: FAIL because the service and System map do not exist.
-- [ ] **Step 3: Add the System/Pause action and implement `InputBindingService` and `GameInputController`** with interactive rebinding, JSON override persistence through `SettingsStore`, map context, and reset-to-default behavior.
-- [ ] **Step 4: Run those tests**; expected: PASS, including a check that UI navigation bindings remain unchanged.
-- [ ] **Step 5: Commit** `git add Assets/InputSystem_Actions.inputactions Assets/GameJamFoundation/Runtime/Input Assets/GameJamFoundation/Tests/EditMode/InputBindingServiceTests.cs` then `git commit -m "feat: add PC input rebinding"`.
+- [x] **Step 1: Write failing EditMode tests** named `RebindableBindings_IncludePlayerAndSystemOnly`, `CompositeOverride_RoundTripsAndResetRestoresDefault`, `SavedOverrides_LoadAfterServiceRecreation`, and `GameplayState_EnablesExpectedMaps`; assert scope, persistence, reset, and map context using an in-memory `InputActionAsset`.
+- [x] **Step 2: Run those tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform EditMode -testResults "Temp/foundation-editmode.xml" -quit`; expected: FAIL because the service and System map do not exist.
+- [x] **Step 3: Add the System/Pause action and implement `InputBindingService` and `GameInputController`** with interactive rebinding, JSON override persistence through `SettingsStore`, map context, and reset-to-default behavior.
+- [x] **Step 4: Run those tests**; expected: PASS, including a check that UI navigation bindings remain unchanged.
+- [x] **Step 5: Commit** `git add Assets/InputSystem_Actions.inputactions Assets/GameJamFoundation/Runtime/Input Assets/GameJamFoundation/Tests/EditMode/InputBindingServiceTests.cs` then `git commit -m "feat: add PC input rebinding"`.
 
 ### Task 4: Audio service and mixer
 
