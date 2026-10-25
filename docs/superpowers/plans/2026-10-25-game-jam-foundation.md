@@ -123,11 +123,11 @@
 - `AudioService.Initialize(AudioMixer mixer, GameSettings settings) -> void` applies saved levels and mute flags when the persistent root starts.
 - Mixer parameters are exposed as `MasterVolume`, `MusicVolume`, and `SfxVolume`; levels clamp to `[0,1]`, map zero to the mixer mute floor, and apply mute without overwriting the selected slider level.
 
-- [ ] **Step 1: Write failing EditMode tests** named `VolumeConversion_ClampsAndMapsMuteFloor`, `Mute_DoesNotOverwriteSelectedLevel`, and `BusParameter_UsesConfiguredMixerName`.
-- [ ] **Step 2: Run those tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform EditMode -testResults "Temp/foundation-editmode.xml" -quit`; expected: FAIL because audio settings and service do not exist.
-- [ ] **Step 3: Create the mixer groups and implement `AudioService`** with persistent music/SFX sources and a pure normalized-to-decibel conversion helper.
-- [ ] **Step 4: Run those tests**; expected: PASS; manually confirm a test clip routes through the assigned mixer group in Play Mode.
-- [ ] **Step 5: Commit** `git add Assets/GameJamFoundation/Runtime/Audio Assets/GameJamFoundation/Audio Assets/GameJamFoundation/Tests/EditMode/AudioServiceTests.cs` then `git commit -m "feat: add audio service"`.
+- [x] **Step 1: Write failing EditMode tests** named `VolumeConversion_ClampsAndMapsMuteFloor`, `Mute_DoesNotOverwriteSelectedLevel`, and `BusParameter_UsesConfiguredMixerName`.
+- [x] **Step 2: Run those tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform EditMode -testResults "Temp/foundation-editmode.xml" -quit`; expected: FAIL because audio settings and service do not exist.
+- [x] **Step 3: Create the mixer groups and implement `AudioService`** with persistent music/SFX sources and a pure normalized-to-decibel conversion helper.
+- [x] **Step 4: Run those tests**; expected: PASS; manually confirm a test clip routes through the assigned mixer group in Play Mode.
+- [x] **Step 5: Commit** `git add Assets/GameJamFoundation/Runtime/Audio Assets/GameJamFoundation/Audio Assets/GameJamFoundation/Tests/EditMode/AudioServiceTests.cs` then `git commit -m "feat: add audio service"`.
 
 ### Task 5: Persistent bootstrap and game flow
 
