@@ -143,11 +143,11 @@
 - `GameFoundationBootstrap` is the single persistent MonoBehaviour root, owns the config and flow/input/settings/audio services, loads `GameSettings` before applying binding overrides and mixer settings, calls `Flow.Tick(Time.deltaTime)`, wires `PausePressed` to Pause while Playing and Resume while Paused, and destroys duplicate instances.
 - Flow methods load only scene names from `GameConfig`; countdown completion calls `FinishRun()` once. Pause sets time scale to zero; resume, returning to menu, and starting a run restore it to one.
 
-- [ ] **Step 1: Write failing EditMode tests** named `StartRun_ResetsDataAndLoadsGame`, `PauseResume_ChangesStateAndTimeScale`, `CountdownExpiry_LoadsResultOnce`, `FinishRun_RecordsConfiguredBestScore`, and `ReturnToMenu_RestoresTimeScale`; use injected callbacks to record scene loads and time-scale changes.
-- [ ] **Step 2: Run those tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform EditMode -testResults "Temp/foundation-editmode.xml" -quit`; expected: FAIL because the flow and bootstrap do not exist.
-- [ ] **Step 3: Implement `GameFlowController` and `GameFoundationBootstrap`** with guarded state transitions and standalone-only application quit behavior.
-- [ ] **Step 4: Run those tests**; expected: PASS for flow transitions, score storage, and time-scale restoration.
-- [ ] **Step 5: Commit** `git add Assets/GameJamFoundation/Runtime/App Assets/GameJamFoundation/Tests/EditMode/GameFlowTests.cs` then `git commit -m "feat: add persistent game flow"`.
+- [x] **Step 1: Write failing EditMode tests** named `StartRun_ResetsDataAndLoadsGame`, `PauseResume_ChangesStateAndTimeScale`, `CountdownExpiry_LoadsResultOnce`, `FinishRun_RecordsConfiguredBestScore`, and `ReturnToMenu_RestoresTimeScale`; use injected callbacks to record scene loads and time-scale changes.
+- [x] **Step 2: Run those tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform EditMode -testResults "Temp/foundation-editmode.xml" -quit`; expected: FAIL because the flow and bootstrap do not exist.
+- [x] **Step 3: Implement `GameFlowController` and `GameFoundationBootstrap`** with guarded state transitions and standalone-only application quit behavior.
+- [x] **Step 4: Run those tests**; expected: PASS for flow transitions, score storage, and time-scale restoration.
+- [x] **Step 5: Commit** `git add Assets/GameJamFoundation/Runtime/App Assets/GameJamFoundation/Tests/EditMode/GameFlowTests.cs` then `git commit -m "feat: add persistent game flow"`.
 
 ### Task 6: Menu, settings, pause, HUD, and result UI
 
