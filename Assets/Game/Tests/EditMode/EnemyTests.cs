@@ -69,6 +69,26 @@ namespace FreedomJam.Game.Tests
             enemy.Initialize(creature, null); enemy.Initialize(creature, null);
             Assert.That(go.transform.localScale, Is.EqualTo(Vector3.one * 2));
         }
+        [Test] public void Initialize_WithStatMultipliers_ScalesHpSpeedSizeAndDamage()
+        {
+            creature.moveSpeed = 3; creature.contactDamage = 1;
+            enemy.Initialize(creature, null, new EnemyStatMultipliers { hp = 2f, damage = 1.5f, speed = 1.5f, size = 1.25f });
+            Assert.That(enemy.MaxHP, Is.EqualTo(10)); Assert.That(enemy.CurrentHP, Is.EqualTo(10));
+            Assert.That(enemy.MoveSpeed, Is.EqualTo(4.5f).Within(1e-5)); Assert.That(enemy.ContactDamage, Is.EqualTo(1.5f).Within(1e-5));
+            Assert.That(enemy.BodySize, Is.EqualTo(2.5f).Within(1e-5)); Assert.That(go.transform.localScale.x, Is.EqualTo(2.5f).Within(1e-5));
+        }
+        [Test] public void Reuse_TakesNewStatMultipliers()
+        {
+            enemy.Initialize(creature, null, new EnemyStatMultipliers { hp = 2f, damage = 2f, speed = 2f, size = 2f });
+            enemy.Initialize(creature, null);
+            Assert.That(enemy.MaxHP, Is.EqualTo(5)); Assert.That(enemy.CurrentHP, Is.EqualTo(5));
+            Assert.That(go.transform.localScale, Is.EqualTo(Vector3.one * 2));
+        }
+        [Test] public void UnsetStatMultipliers_CountAsOne()
+        {
+            enemy.Initialize(creature, null, default);
+            Assert.That(enemy.MaxHP, Is.EqualTo(5)); Assert.That(enemy.BodySize, Is.EqualTo(2));
+        }
         [Test] public void DyingInsideMouth_RaisesEatenOnlyAndReleases()
         {
             CreatureData eaten = null; var killed = 0;

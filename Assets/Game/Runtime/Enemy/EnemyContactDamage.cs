@@ -22,7 +22,7 @@ namespace FreedomJam.Game.Enemy
             if (Time.deltaTime <= 0f || !enemy.IsAlive || enemy.Creature == null || Time.time < nextHitTime) return;
             if (!enemy.IsTouchingPlayer()) return;
 
-            GameplayContext.Player.Character.TakeDamage(new DamageInfo(enemy.Creature.contactDamage, DamageType.Normal, enemy));
+            GameplayContext.Player.Character.TakeDamage(new DamageInfo(enemy.ContactDamage, DamageType.Normal, enemy));
             nextHitTime = Time.time + enemy.Creature.contactDamageInterval;
         }
     }

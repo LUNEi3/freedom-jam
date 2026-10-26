@@ -34,6 +34,8 @@ namespace FreedomJam.Game.Enemy
             [Min(0)] public int maxAliveStart = 10;
             [Min(0)] public int maxAliveEnd = 12;
             public List<CreatureShare> creatures = new List<CreatureShare>();
+            [Tooltip("Multipliers for enemies spawned during this phase, on top of their creature stats. Enemies already alive keep theirs.")]
+            public EnemyStatMultipliers enemyStats = EnemyStatMultipliers.One;
         }
 
         [Header("Spawn area")]
@@ -48,9 +50,12 @@ namespace FreedomJam.Game.Enemy
         [SerializeField] List<SpawnPhase> phases = new List<SpawnPhase>
         {
             new SpawnPhase { startTime = 0f, spawnsPerSecond = 1f, maxAliveStart = 10, maxAliveEnd = 12 },
-            new SpawnPhase { startTime = 30f, spawnsPerSecond = 1.5f, maxAliveStart = 12, maxAliveEnd = 20 },
-            new SpawnPhase { startTime = 60f, spawnsPerSecond = 2.5f, maxAliveStart = 20, maxAliveEnd = 35 },
-            new SpawnPhase { startTime = 90f, spawnsPerSecond = 4f, maxAliveStart = 35, maxAliveEnd = 50 },
+            new SpawnPhase { startTime = 30f, spawnsPerSecond = 1.5f, maxAliveStart = 12, maxAliveEnd = 20,
+                enemyStats = new EnemyStatMultipliers { hp = 1.25f, damage = 1.25f, speed = 1.1f, size = 1.1f } },
+            new SpawnPhase { startTime = 60f, spawnsPerSecond = 2.5f, maxAliveStart = 20, maxAliveEnd = 35,
+                enemyStats = new EnemyStatMultipliers { hp = 1.5f, damage = 1.5f, speed = 1.2f, size = 1.2f } },
+            new SpawnPhase { startTime = 90f, spawnsPerSecond = 4f, maxAliveStart = 35, maxAliveEnd = 50,
+                enemyStats = new EnemyStatMultipliers { hp = 2f, damage = 2f, speed = 1.3f, size = 1.3f } },
         };
 
         readonly Dictionary<CreatureData, ObjectPool<EnemyCharacter>> pools = new();
@@ -153,7 +158,7 @@ namespace FreedomJam.Game.Enemy
 
             enemy.transform.SetPositionAndRotation(
                 SpawnMath.RingPoint(center, spawnRingRadius, Random.value), Quaternion.identity);
-            enemy.Initialize(creature, release);
+            enemy.Initialize(creature, release, phase.enemyStats);
             alive.Add(enemy);
             return true;
         }
