@@ -40,6 +40,11 @@ namespace FreedomJam.Game.Player
             return parts.Count > 0 ? string.Join(", ", parts) : "no reward";
         }
 
-        internal void SetLabel(string value) => label = value;
+        internal void SetLabel(string value)
+        {
+            label = value;
+            foreach (var reward in rewards)
+                if (reward != null) reward.RefreshLabel();
+        }
     }
 }

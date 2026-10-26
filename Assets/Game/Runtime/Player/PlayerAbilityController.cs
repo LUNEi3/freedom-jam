@@ -44,17 +44,25 @@ namespace FreedomJam.Game.Player
             new SuckLevelSettings { range = 8.5f, coneAngle = 100f, pullDuration = 0.6f, pullSpeed = 14f, cooldown = 9f }
         };
 
+        [Header("Size scaling (1 + (size ÷ starting size − 1) × strength)")]
+        [Tooltip("How much Dash distance grows with player size. 0 = never, 1 = same rate as size.")]
+        [SerializeField] float dashDistanceSizeStrength = 1f;
+        [Tooltip("How much Suck range grows with player size. 0 = never, 1 = same rate as size.")]
+        [SerializeField] float suckRangeSizeStrength = 1f;
+
         PlayerCharacter player;
         float dashReadyAt;
         float suckReadyAt;
 
         public int DashLevel { get; private set; }
         public int SuckLevel { get; private set; }
-        public float DashDistance => CurrentDash != null ? Mathf.Max(0f, CurrentDash.distance) : 0f;
+        /// <summary>Includes size scaling.</summary>
+        public float DashDistance => CurrentDash != null ? Mathf.Max(0f, CurrentDash.distance) * SizeMultiplier(dashDistanceSizeStrength) : 0f;
         public float DashSpeed => CurrentDash != null ? Mathf.Max(0.01f, CurrentDash.speed) : 0f;
         public float DashCooldown => CurrentDash != null ? Mathf.Max(0f, CurrentDash.cooldown) : 0f;
         public float DashCooldownRemaining => Mathf.Max(0f, dashReadyAt - Time.time);
-        public float SuckDistance => CurrentSuck != null ? Mathf.Max(0f, CurrentSuck.range) : 0f;
+        /// <summary>Includes size scaling.</summary>
+        public float SuckDistance => CurrentSuck != null ? Mathf.Max(0f, CurrentSuck.range) * SizeMultiplier(suckRangeSizeStrength) : 0f;
         public float SuckConeAngle => CurrentSuck != null ? Mathf.Clamp(CurrentSuck.coneAngle, 1f, 360f) : 100f;
         public float SuckCooldown => CurrentSuck != null ? Mathf.Max(0f, CurrentSuck.cooldown) : 0f;
         public float SuckCooldownRemaining => Mathf.Max(0f, suckReadyAt - Time.time);
@@ -117,7 +125,7 @@ namespace FreedomJam.Game.Player
         {
             var settings = CurrentDash;
             if (settings == null || DashCooldownRemaining > 0f) return;
-            if (!player.TryDashForward(settings.distance, settings.speed)) return;
+            if (!player.TryDashForward(DashDistance, settings.speed)) return;
             dashReadyAt = Time.time + Mathf.Max(0f, settings.cooldown);
         }
 
@@ -129,7 +137,7 @@ namespace FreedomJam.Game.Player
 
             var origin = player.transform.position;
             var forward = player.transform.forward;
-            var range = Mathf.Max(0f, settings.range);
+            var range = SuckDistance;
             var angle = Mathf.Clamp(settings.coneAngle, 1f, 360f);
             var duration = Mathf.Max(0f, settings.pullDuration);
             var speed = Mathf.Max(0f, settings.pullSpeed);
@@ -153,6 +161,8 @@ namespace FreedomJam.Game.Player
                 orb.StartSuction(speed);
             }
         }
+
+        float SizeMultiplier(float strength) => player != null ? SizeScaling.Multiplier(player.SizeRatio, strength) : 1f;
 
         static T GetLevel<T>(List<T> levels, int level) where T : class =>
             levels != null && level > 0 && level <= levels.Count ? levels[level - 1] : null;

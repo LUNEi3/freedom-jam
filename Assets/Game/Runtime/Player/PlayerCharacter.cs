@@ -44,6 +44,8 @@ namespace FreedomJam.Game.Player
         public float FireDamage => GetStat(StatType.FireDamage);
         public float MouthTickInterval => GetStat(StatType.MouthTickInterval);
         public float PickupRadius => GetStat(StatType.PickupRadius);
+        /// <summary>Current size ÷ starting size (1 = not grown yet). Used to scale abilities with size.</summary>
+        public float SizeRatio => Stats != null ? Stats.SizeRatio : 1f;
         /// <summary>Mouth cone length; scales with body size (MVP REQ-MOUTH-4).</summary>
         public float MouthRange => config != null ? config.MouthRange * BodySize : 0f;
         public float MouthAngle => config != null ? config.MouthAngle : 0f;
@@ -75,7 +77,7 @@ namespace FreedomJam.Game.Player
 
             if (config != null && levelConfig != null)
             {
-                Stats = new PlayerStats(config.GetBaseValue, levelConfig, EatStack);
+                Stats = new PlayerStats(config.GetBaseValue, levelConfig, EatStack, config);
                 Experience = new PlayerExperience(levelConfig);
                 Experience.LeveledUp += Stats.SetLevel;
                 Experience.LeveledUp += OnLevelUp;

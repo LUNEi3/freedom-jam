@@ -24,3 +24,10 @@ MonoBehaviour:
   mouthTargetRadius: 0.5
   pickupRadius: 2
   hitInvulnerability: 0.5
+  sizeScaling:
+  - label: "MaxHP  \xD71 strength (size \xD71.5 \u2192 \xD71.5)"
+    stat: 0
+    strength: 1
+  - label: "BaseDamage  \xD70.5 strength (size \xD71.5 \u2192 \xD71.25)"
+    stat: 3
+    strength: 0.5

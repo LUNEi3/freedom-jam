@@ -7,6 +7,8 @@ namespace FreedomJam.Game.Player
     [Serializable]
     public sealed class StatMultiplierReward : IEatReward
     {
+        // First string field = the element's name in the Inspector list. Filled in by EatStackConfig.OnValidate.
+        [SerializeField, HideInInspector] string label;
         [SerializeField] StatType stat = StatType.BaseDamage;
         [Tooltip("Total multiplier while this tier is active. 1.5 = +50 %. For MouthTickInterval, 2 = bites twice as often.")]
         [SerializeField] float multiplier = 1.5f;
@@ -30,5 +32,7 @@ namespace FreedomJam.Game.Player
         }
 
         public string Describe() => IsValid ? $"{stat} ×{multiplier:0.##}" : $"{stat} (multiplier must be above 0)";
+
+        internal void RefreshLabel() => label = IsValid ? Describe() : $"{stat}  [WARNING: multiplier must be above 0]";
     }
 }
