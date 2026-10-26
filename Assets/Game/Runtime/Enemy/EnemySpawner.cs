@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FreedomJam.Foundation;
 using UnityEngine;
 using UnityEngine.Pool;
 using Random = UnityEngine.Random;
@@ -8,7 +9,7 @@ namespace FreedomJam.Game.Enemy
 {
     /// <summary>
     /// Spawns pooled enemies on a ring around the player, ramping up over run time (MVP §4.6),
-    /// and recycles enemies left too far behind.
+    /// and recycles enemies left too far behind. Run time comes from the foundation run timer when there is one.
     /// </summary>
     public sealed class EnemySpawner : MonoBehaviour
     {
@@ -31,7 +32,7 @@ namespace FreedomJam.Game.Enemy
             var deltaTime = Time.deltaTime;
             if (config == null || player == null || player.Character == null || !player.Character.IsAlive || deltaTime <= 0f) return;
 
-            ElapsedSeconds += deltaTime;
+            ElapsedSeconds = SpawnMath.NextElapsedSeconds(ElapsedSeconds, deltaTime, RunElapsedSeconds());
             var center = player.Character.transform.position;
             RecycleFarEnemies(center);
 
@@ -47,6 +48,14 @@ namespace FreedomJam.Game.Enemy
                 }
                 if (!Spawn(center)) break;
             }
+        }
+
+        /// <summary>Seconds since the run started, so spawn waves match the HUD countdown. Null without a run (sandbox).</summary>
+        static float? RunElapsedSeconds()
+        {
+            var bootstrap = GameFoundationBootstrap.Instance;
+            var run = bootstrap != null && bootstrap.Flow != null ? bootstrap.Flow.CurrentRun : null;
+            return run != null ? run.ElapsedSeconds : null;
         }
 
         void OnDestroy()

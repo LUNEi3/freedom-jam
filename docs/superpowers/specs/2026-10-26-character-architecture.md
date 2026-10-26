@@ -258,7 +258,7 @@ public sealed class CreatureData : CharacterData
 
 - Player and enemies each have a **kinematic `Rigidbody`** (needed for trigger events) and move by setting `transform` position/rotation inside `Tick`. `Tick` runs from `Update`, where `Rigidbody.MovePosition` would only apply once per physics step and lose movement at high frame rates.
 - In the collision matrix, turn **off** `Enemy`↔`Enemy` and `Pickup`↔`Enemy`. Keep `Player`↔`Enemy` and `Player`↔`Pickup`.
-- **Body radius rule:** every Character's body is a circle on the XZ plane with radius `BodySize × 0.5`. Prefabs are built so that a `BodySize` of 1 is a 1-unit-wide body (Unity's default sphere / capsule). Enemies use this to stop at the player's surface and to detect contact (REQ-ECHAR-1/3), so the **player prefab must follow it too**.
+- **Body radius rule:** every Character's body is a circle on the XZ plane with radius `BodySize × 0.5`. Prefabs are built so that a `BodySize` of 1 is a 1-unit-wide body (Unity's default sphere / capsule). Enemies use this to stop at the player's surface, to keep apart from each other and to detect contact (REQ-ECHAR-1/3), so the **player prefab must follow it too**. Enemy↔enemy collision is this same distance rule, not physics (the Enemy↔Enemy layer pair stays off).
 - The player's mouth finds enemies with `Physics.OverlapSphere(position, mouthRange, enemyMask)` and then the cone test. It does not need its own collider.
 
 ---
@@ -300,6 +300,8 @@ public abstract class EnemyCharacter : Character
 ```
 
 - **REQ-ECHAR-1** `Move` (virtual) chases `GameplayContext.Player.Character` at a constant `MoveSpeed` on the XZ plane (no acceleration or momentum), facing the player. It stops when the bodies touch (`ContactDistance` = both radii, §3.6) and is never inside the player: if it ends up closer, it moves straight back out to the surface that frame. If there is no living player, it stands still.
+  After `Move`, `Tick` separates the enemy from every other active, living enemy it overlaps (each moves half the overlap, so neighbours end up touching), then moves it back out of the player if that push put it inside. Separation runs in `Tick`, not `Move`, so subclasses that override `Move` still collide.
+  `ApplySuction(target, speed, duration)` (used by the player's Suck ability) makes the default `Move` head for `target` at `speed` instead of chasing the player, stopping at the target's surface, until `duration` runs out or the target dies. `OnReset` clears it, so pooled enemies start without suction.
 - **REQ-ECHAR-2** `OnDied` resolves eat-vs-kill **at that moment**, whatever dealt the killing blow (MVP §4.3):
   - `GameplayContext.Player?.IsInMouth(transform.position) == true` → `GameplayEvents.RaiseCreatureEaten(Creature)`.
   - otherwise → `GameplayEvents.RaiseCreatureKilled(Creature, transform.position)`.

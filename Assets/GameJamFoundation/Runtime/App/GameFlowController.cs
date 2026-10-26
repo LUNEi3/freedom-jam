@@ -77,7 +77,8 @@ namespace FreedomJam.Foundation
         {
             if (CurrentRun == null || (State != GameState.Playing && State != GameState.Paused)) return;
 
-            CurrentRun.Complete();
+            // Already Won if the countdown just ran out; otherwise the run ended early.
+            CurrentRun.Complete(RunOutcome.Lost);
             RestoreNormalTimeScale();
             store.TryRecordBestScore(config.bestScoreKey, CurrentRun.Score, config.bestScoreDefault, config.scoreDirection);
             SetState(GameState.Result);

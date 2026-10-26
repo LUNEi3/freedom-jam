@@ -142,6 +142,7 @@ namespace FreedomJam.Foundation.Tests
         public void ResultButtons_RestartOrReturnToMenu()
         {
             var result = NewObject("Result Menu").AddComponent<ResultMenuController>();
+            result.titleLabel = NewText("Title");
             result.scoreLabel = NewText("Final Score");
             result.bestScoreLabel = NewText("Best Score");
             result.timeLabel = NewText("Run Time");
@@ -152,6 +153,7 @@ namespace FreedomJam.Foundation.Tests
             flow.SetScore(25);
             flow.FinishRun();
 
+            Assert.That(result.titleLabel.text, Is.EqualTo(ResultMenuController.LostTitle));
             Assert.That(result.scoreLabel.text, Is.EqualTo("25"));
             Assert.That(result.bestScoreLabel.text, Is.EqualTo("25"));
 

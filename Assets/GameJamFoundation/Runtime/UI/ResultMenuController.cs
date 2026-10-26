@@ -7,6 +7,10 @@ namespace FreedomJam.Foundation
 {
     public sealed class ResultMenuController : MonoBehaviour
     {
+        public const string WonTitle = "YOU SURVIVED!";
+        public const string LostTitle = "GAME OVER";
+
+        public Text titleLabel;
         public Text scoreLabel;
         public Text bestScoreLabel;
         public Text timeLabel;
@@ -74,6 +78,8 @@ namespace FreedomJam.Foundation
         {
             if (flow == null || flow.CurrentRun == null) return;
             var run = flow.CurrentRun;
+            if (titleLabel != null && run.Outcome != RunOutcome.None)
+                titleLabel.text = run.Outcome == RunOutcome.Won ? WonTitle : LostTitle;
             if (scoreLabel != null) scoreLabel.text = run.Score.ToString();
             if (timeLabel != null) timeLabel.text = FormatTime(run.ElapsedSeconds);
             if (bestScoreLabel != null && store != null)

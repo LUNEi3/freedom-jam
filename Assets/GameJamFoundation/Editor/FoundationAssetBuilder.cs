@@ -192,7 +192,7 @@ namespace FreedomJam.Foundation.Editor
             panel.gameObject.AddComponent<Image>().color = PanelColor;
             var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             ConfigureVertical(layout, new RectOffset(68, 68, 48, 40), 15f);
-            CreateText("Title", panel, "RUN COMPLETE", 42, TextAnchor.MiddleCenter, Color.white, 72f, FontStyle.Bold);
+            var title = CreateText("Title", panel, "RUN COMPLETE", 42, TextAnchor.MiddleCenter, Color.white, 72f, FontStyle.Bold);
             var score = CreateText("FinalScore", panel, "0", 36, TextAnchor.MiddleCenter, AccentColor, 50f, FontStyle.Bold);
             var best = CreateText("BestScore", panel, "BEST 0", 22, TextAnchor.MiddleCenter, Color.white, 38f, FontStyle.Normal);
             var time = CreateText("RunTime", panel, "00:00", 22, TextAnchor.MiddleCenter, Color.white, 38f, FontStyle.Normal);
@@ -203,6 +203,7 @@ namespace FreedomJam.Foundation.Editor
             var nestedSettings = InstantiateNested(settingsPrefab, root.transform);
 
             var controller = root.AddComponent<ResultMenuController>();
+            controller.titleLabel = title;
             controller.scoreLabel = score;
             controller.bestScoreLabel = best;
             controller.timeLabel = time;

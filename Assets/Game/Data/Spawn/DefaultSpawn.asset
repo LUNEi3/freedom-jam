@@ -63,7 +63,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   creatures:
-  - creature: {fileID: 11400000, guid: 7040fc0b5d81049078f6a06cfc2d783d, type: 2}
+  - creature: {fileID: 11400000, guid: 5e2dbb40337724829bf94d8955fac6df, type: 2}
     weight:
       serializedVersion: 2
       m_Curve:
@@ -71,17 +71,60 @@ MonoBehaviour:
         time: 0
         value: 1
         inSlope: 0
+        outSlope: Infinity
+        tangentMode: 97
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 30
+        value: 1
+        inSlope: Infinity
+        outSlope: -0.0055555557
+        tangentMode: 71
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 120
+        value: 0.5
+        inSlope: -0.0055555557
         outSlope: 0
-        tangentMode: 0
+        tangentMode: 69
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  - creature: {fileID: 11400000, guid: 7040fc0b5d81049078f6a06cfc2d783d, type: 2}
+    weight:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: Infinity
+        tangentMode: 97
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 30
+        value: 1
+        inSlope: Infinity
+        outSlope: 0
+        tangentMode: 71
         weightedMode: 0
         inWeight: 0
         outWeight: 0
       - serializedVersion: 3
         time: 120
         value: 1
-        inSlope: 0
+        inSlope: -0
         outSlope: 0
-        tangentMode: 0
+        tangentMode: 69
         weightedMode: 0
         inWeight: 0
         outWeight: 0
@@ -94,19 +137,62 @@ MonoBehaviour:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.3
+        value: 0
         inSlope: 0
-        outSlope: 0.01
-        tangentMode: 0
+        outSlope: Infinity
+        tangentMode: 97
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 30
+        value: 0.3
+        inSlope: Infinity
+        outSlope: 0.013333334
+        tangentMode: 71
         weightedMode: 0
         inWeight: 0
         outWeight: 0
       - serializedVersion: 3
         time: 120
         value: 1.5
-        inSlope: 0.01
+        inSlope: 0.013333334
         outSlope: 0
-        tangentMode: 0
+        tangentMode: 69
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  - creature: {fileID: 11400000, guid: e850da66deb5744a5bb93ee18a8ff47f, type: 2}
+    weight:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: Infinity
+        tangentMode: 97
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 30
+        value: 0.3
+        inSlope: Infinity
+        outSlope: 0.013333334
+        tangentMode: 71
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 120
+        value: 1.5
+        inSlope: 0.013333334
+        outSlope: 0
+        tangentMode: 69
         weightedMode: 0
         inWeight: 0
         outWeight: 0

@@ -31,6 +31,7 @@ namespace FreedomJam.Game.Tests
         class TestEnemy : BasicEnemy
         {
             public void Step(float deltaTime) => Move(deltaTime);
+            public void Frame(float deltaTime) => Tick(deltaTime);
         }
 
         GameObject go;
@@ -150,6 +151,77 @@ namespace FreedomJam.Game.Tests
             Assert.That(chaser.IsTouchingPlayer(), Is.False);
         });
 
+        // Suction target (bodySize 1) at x = 20; the player from WithChaseSetup stays at the origin.
+        void WithSuctionTarget(System.Action<TestPlayer> test)
+        {
+            var targetData = ScriptableObject.CreateInstance<TestPlayerData>(); targetData.bodySize = 1;
+            var targetGo = new GameObject("SuctionTarget"); var target = targetGo.AddComponent<TestPlayer>();
+            target.data = targetData; target.ResetCharacter();
+            targetGo.transform.position = new Vector3(20, 0, 0);
+            try { test(target); }
+            finally { Object.DestroyImmediate(targetGo); Object.DestroyImmediate(targetData); }
+        }
+
+        [Test] public void Suction_PullsTowardTargetAtItsSpeedAndStopsAtContact() => WithChaseSetup((chaser, enemyGo) =>
+            WithSuctionTarget(target =>
+            {
+                enemyGo.transform.position = new Vector3(10, 0, 0);
+                chaser.ApplySuction(target, 4f, 10f);
+                chaser.Step(1f);
+                Assert.That(enemyGo.transform.position.x, Is.EqualTo(14f).Within(1e-4));
+                chaser.Step(100f);
+                Assert.That(enemyGo.transform.position.x, Is.EqualTo(18.5f).Within(1e-4));
+            }));
+        [Test] public void Suction_IsClearedWhenReused() => WithChaseSetup((chaser, enemyGo) =>
+            WithSuctionTarget(target =>
+            {
+                enemyGo.transform.position = new Vector3(10, 0, 0);
+                chaser.ApplySuction(target, 4f, 10f);
+                chaser.Initialize(creature, null);
+                chaser.Step(1f);
+                Assert.That(enemyGo.transform.position.x, Is.EqualTo(7f).Within(1e-4));
+            }));
+
+        // Second enemy (bodySize 2, radius 1) next to the chaser: the two touch at 2 units apart.
+        void WithNeighbour(Vector3 at, System.Action<TestEnemy, GameObject> test)
+        {
+            var neighbourGo = new GameObject("Neighbour"); var neighbour = neighbourGo.AddComponent<TestEnemy>();
+            neighbour.Initialize(creature, null);
+            neighbourGo.transform.position = at;
+            try { test(neighbour, neighbourGo); }
+            finally { Object.DestroyImmediate(neighbourGo); }
+        }
+
+        // deltaTime 0: Move does nothing, so only separation runs.
+        [Test] public void Separation_PushesOverlappingEnemiesApartUntilTouching() => WithChaseSetup((chaser, enemyGo) =>
+            WithNeighbour(new Vector3(0.5f, 0, 20), (neighbour, neighbourGo) =>
+            {
+                enemyGo.transform.position = new Vector3(0, 0, 20);
+                for (var i = 0; i < 30; i++) { chaser.Frame(0f); neighbour.Frame(0f); }
+                Assert.That(Vector3.Distance(enemyGo.transform.position, neighbourGo.transform.position), Is.EqualTo(2f).Within(1e-3));
+                Assert.That(enemyGo.transform.position.z, Is.EqualTo(20f).Within(1e-4));
+            }));
+        [Test] public void Separation_NeverPushesIntoPlayer() => WithChaseSetup((chaser, enemyGo) =>
+            WithNeighbour(new Vector3(0, 0, 2f), (neighbour, neighbourGo) =>
+            {
+                enemyGo.transform.position = new Vector3(0, 0, 1.5f);
+                chaser.Frame(0f);
+                Assert.That(enemyGo.transform.position.magnitude, Is.EqualTo(1.5f).Within(1e-4));
+            }));
+        [Test] public void Separation_IgnoresInactiveAndDeadEnemies() => WithChaseSetup((chaser, enemyGo) =>
+            WithNeighbour(new Vector3(0.5f, 0, 20), (neighbour, neighbourGo) =>
+            {
+                enemyGo.transform.position = new Vector3(0, 0, 20);
+                neighbourGo.SetActive(false);
+                chaser.Frame(0f);
+                Assert.That(enemyGo.transform.position, Is.EqualTo(new Vector3(0, 0, 20)));
+
+                neighbourGo.SetActive(true);
+                neighbour.TakeDamage(Hit(99));
+                chaser.Frame(0f);
+                Assert.That(enemyGo.transform.position, Is.EqualTo(new Vector3(0, 0, 20)));
+            }));
+
         [Test] public void RingPoint_IsOnRingAtCenterHeight()
         {
             var center = new Vector3(5, 2, -3);
@@ -159,6 +231,11 @@ namespace FreedomJam.Game.Tests
                 Assert.That(point.y, Is.EqualTo(2));
                 Assert.That(Vector3.Distance(point, center), Is.EqualTo(10).Within(1e-4));
             }
+        }
+        [Test] public void NextElapsedSeconds_FollowsRunTimerOrCountsOnItsOwn()
+        {
+            Assert.That(SpawnMath.NextElapsedSeconds(5f, 0.5f, null), Is.EqualTo(5.5f));
+            Assert.That(SpawnMath.NextElapsedSeconds(5f, 0.5f, 42f), Is.EqualTo(42f));
         }
         [Test] public void PickWeighted_SplitsRollByWeight()
         {
