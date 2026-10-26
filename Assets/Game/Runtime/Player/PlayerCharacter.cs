@@ -9,7 +9,7 @@ namespace FreedomJam.Game.Player
     /// HP, damage and death live in Character.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
-    public sealed class PlayerCharacter : Character, IPlayer
+    public sealed class PlayerCharacter : Character, IPlayer, IInvincibilityState
     {
         [SerializeField] PlayerConfig config;
         [SerializeField] LevelConfig levelConfig;
@@ -23,6 +23,9 @@ namespace FreedomJam.Game.Player
         Vector3 prefabScale = Vector3.one;
         float invulnerableUntil;
         float lastMaxHP;
+        Vector3 dashDirection;
+        float dashDistanceRemaining;
+        float dashSpeed;
 
         public PlayerStats Stats { get; private set; }
         public PlayerExperience Experience { get; private set; }
@@ -64,6 +67,7 @@ namespace FreedomJam.Game.Player
                 Stats = new PlayerStats(config.GetBaseValue, levelConfig);
                 Experience = new PlayerExperience(levelConfig);
                 Experience.LeveledUp += Stats.SetLevel;
+                Experience.LeveledUp += OnLevelUp;
                 Stats.Changed += OnStatsChanged;
             }
         }
@@ -86,13 +90,19 @@ namespace FreedomJam.Game.Player
 
         void OnDestroy()
         {
-            if (Experience != null && Stats != null) Experience.LeveledUp -= Stats.SetLevel;
+            if (Experience != null)
+            {
+                if (Stats != null) Experience.LeveledUp -= Stats.SetLevel;
+                Experience.LeveledUp -= OnLevelUp;
+            }
             if (Stats != null) Stats.Changed -= OnStatsChanged;
         }
 
         protected override void OnReset()
         {
             invulnerableUntil = 0f;
+            dashDistanceRemaining = 0f;
+            dashSpeed = 0f;
             lastMaxHP = MaxHP;
             ApplyBodyScale();
         }
@@ -103,15 +113,40 @@ namespace FreedomJam.Game.Player
 
             var steer = steering != null ? steering.Steer : 0f;
             var rotation = transform.rotation * Quaternion.Euler(0f, steer * SteerSpeed * deltaTime, 0f);
+
+            var displacement = rotation * Vector3.forward * (MoveSpeed * deltaTime);
+            if (dashDistanceRemaining > 0f && dashSpeed > 0f)
+            {
+                var dashStep = Mathf.Min(dashDistanceRemaining, dashSpeed * deltaTime);
+                displacement += dashDirection * dashStep;
+                dashDistanceRemaining -= dashStep;
+            }
+
             transform.SetPositionAndRotation(
-                transform.position + rotation * Vector3.forward * (MoveSpeed * deltaTime),
+                transform.position + displacement,
                 rotation);
+        }
+
+        /// <summary>Starts a forward dash that travels over time at the configured speed.</summary>
+        public bool TryDashForward(float distance, float speed)
+        {
+            if (!IsAlive || dashDistanceRemaining > 0f || !(distance > 0f) || !(speed > 0f)) return false;
+            var forward = transform.forward;
+            forward.y = 0f;
+            if (forward.sqrMagnitude < 1e-6f) return false;
+
+            dashDirection = forward.normalized;
+            dashDistanceRemaining = distance;
+            dashSpeed = speed;
+            return true;
         }
 
         /// <summary>Body radius = BodySize × 0.5 (architecture §3.6): a prefab built 1 unit wide scales with BodySize.</summary>
         void ApplyBodyScale() => transform.localScale = prefabScale * BodySize;
 
-        protected override bool CanReceiveDamage(DamageInfo info) => Time.time >= invulnerableUntil;
+        public bool IsInvincible => IsAlive && Time.time < invulnerableUntil;
+
+        protected override bool CanReceiveDamage(DamageInfo info) => !IsInvincible;
 
         protected override void OnDamaged(DamageInfo info)
         {
@@ -163,6 +198,8 @@ namespace FreedomJam.Game.Player
             lastMaxHP = maxHP;
             ApplyBodyScale();
         }
+
+        void OnLevelUp(int _) => Heal(MaxHP);
 
         float GetStat(StatType stat)
         {

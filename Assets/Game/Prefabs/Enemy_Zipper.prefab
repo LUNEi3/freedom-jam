@@ -15,6 +15,10 @@ GameObject:
   - component: {fileID: 3423101855025104760}
   - component: {fileID: 6072040846151269752}
   - component: {fileID: 2724265616931500451}
+  - component: {fileID: 1850293051983361958}
+  - component: {fileID: 7652308550593029976}
+  - component: {fileID: 3489621228384259048}
+  - component: {fileID: 5727103128991223203}
   m_Layer: 9
   m_Name: Enemy_Zipper
   m_TagString: Untagged
@@ -167,6 +171,60 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7580805dd138e4d0a985d6b16f18bf81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.Enemy.EnemyContactDamage
+--- !u!114 &1850293051983361958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6949957070117065916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa64f96757aa8564ead6205204e288b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.CharacterHealthSource
+--- !u!114 &7652308550593029976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6949957070117065916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cd59d89956cbcb4b865971de6e98548, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.CharacterVisualFeedback
+  config: {fileID: 11400000, guid: 9562dfbdfeabffa46829b0106baa053b, type: 2}
+  useWhiteDamageFlash: 1
+--- !u!114 &3489621228384259048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6949957070117065916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8255b8a4b5a077541b40554057f7ab8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.DamageNumberSpawner
+  config: {fileID: 11400000, guid: 9562dfbdfeabffa46829b0106baa053b, type: 2}
+  numberPrefab: {fileID: 3120189223475948238, guid: 78a68e6d6b25cf644a6ee3659186c004, type: 3}
+--- !u!114 &5727103128991223203
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6949957070117065916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61f9821f59dc8dc42bb6b65253f2139d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.EnemyHealthBar
+  config: {fileID: 11400000, guid: 9562dfbdfeabffa46829b0106baa053b, type: 2}
+  viewPrefab: {fileID: 8313624798147630356, guid: 13864c43952e1bf448020075c3d8c1c3, type: 3}
 --- !u!1 &7418933619979042954
 GameObject:
   m_ObjectHideFlags: 0

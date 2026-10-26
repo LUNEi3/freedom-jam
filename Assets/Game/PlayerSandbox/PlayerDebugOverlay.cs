@@ -39,9 +39,9 @@ namespace FreedomJam.Game.PlayerSandbox
 
         void OnGUI()
         {
-            if (player == null) return;
+            if (player == null || Time.timeScale <= 0f) return;
 
-            GUILayout.BeginArea(new Rect(10, 10, 360, 520), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(10, 112, 360, 520), GUI.skin.box);
             GUILayout.Label("<b>Player sandbox</b>   A / D to steer", Rich);
             GUILayout.Label($"HP {player.CurrentHP:0.#} / {player.MaxHP:0.#}   {(player.IsAlive ? "alive" : "DEAD")}");
 
@@ -55,6 +55,15 @@ namespace FreedomJam.Game.PlayerSandbox
             {
                 foreach (var stat in Stats)
                     GUILayout.Label($"{stat,-18} {stats.Get(stat),7:0.##}  ×{stats.GetMultiplier(stat):0.##}  (bonus {stats.GetBonus(stat):+0.##;-0.##;0})");
+            }
+
+            var abilities = player.GetComponent<PlayerAbilityController>();
+            if (abilities != null)
+            {
+                var dashState = abilities.DashLevel == 0 ? "LOCKED" : $"{abilities.DashDistance:0.##}m / {abilities.DashSpeed:0.##}m/s, CD {abilities.DashCooldownRemaining:0.0}s";
+                var suckState = abilities.SuckLevel == 0 ? "LOCKED" : $"{abilities.SuckDistance:0.##}m, CD {abilities.SuckCooldownRemaining:0.0}s";
+                GUILayout.Label($"J Dash Lv {abilities.DashLevel}: {dashState}");
+                GUILayout.Label($"K Suck Lv {abilities.SuckLevel}: {suckState}");
             }
 
             GUILayout.Space(6);
