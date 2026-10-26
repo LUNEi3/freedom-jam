@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bee39f64fa2210f4ea95be24fd28b931, type: 3}
+  m_Name: GameJamDefaults
+  m_EditorClassIdentifier: FreedomJam.Foundation::FreedomJam.Foundation.GameConfig
+  mainMenuSceneName: MainMenu
+  gameSceneName: Game
+  resultSceneName: Result
+  timerMode: 1
+  countdownSeconds: 90
+  initialScore: 0
+  bestScoreKey: game-jam-foundation
+  bestScoreDefault: 0
+  scoreDirection: 0
