@@ -15,17 +15,27 @@ namespace FreedomJam.Game.Player
 
         readonly Func<StatType, float> baseValue;
         readonly IStatCaps caps;
+        readonly IStatMultiplierSource extraMultipliers;
+        readonly ISizeScaling sizeScaling;
+        readonly IStatGrowth levelGrowth;
         readonly Dictionary<StatType, float> bonuses = new();
 
         public int Level { get; private set; } = 1;
 
-        /// <summary>Raised after a bonus is added or the level changes.</summary>
+        /// <summary>Raised after a bonus is added, the level changes, or the extra multipliers change.</summary>
         public event Action Changed;
 
-        public PlayerStats(Func<StatType, float> baseValue, IStatCaps caps)
+        /// <param name="extraMultipliers">Optional, e.g. the eat stack. Applied on top of the capped eat bonus, not capped itself.</param>
+        /// <param name="sizeScaling">Optional: stats that also grow with size (see SizeScaling).</param>
+        public PlayerStats(Func<StatType, float> baseValue, IStatCaps caps, IStatMultiplierSource extraMultipliers = null,
+            ISizeScaling sizeScaling = null, IStatGrowth levelGrowth = null)
         {
             this.baseValue = baseValue ?? throw new ArgumentNullException(nameof(baseValue));
             this.caps = caps ?? throw new ArgumentNullException(nameof(caps));
+            this.extraMultipliers = extraMultipliers;
+            this.sizeScaling = sizeScaling;
+            this.levelGrowth = levelGrowth;
+            if (extraMultipliers != null) extraMultipliers.Changed += () => Changed?.Invoke();
         }
 
         public void AddBonus(StatType stat, float bonus)
@@ -55,11 +65,51 @@ namespace FreedomJam.Game.Player
             return Math.Max(MinMultiplier, multiplier);
         }
 
-        /// <summary>Final value: base × multiplier, or base ÷ multiplier for interval stats.</summary>
+        /// <summary>Capped eat bonus × extra multipliers (eat stack) × size scaling, never below MinMultiplier.</summary>
+        public float GetTotalMultiplier(StatType stat)
+        {
+            var multiplier = GetMultiplier(stat);
+            if (extraMultipliers != null)
+            {
+                var extra = extraMultipliers.GetMultiplier(stat);
+                if (extra > 0f && !float.IsInfinity(extra)) multiplier *= extra;
+            }
+            multiplier *= GetLevelMultiplier(stat);
+            multiplier *= GetSizeMultiplier(stat);
+            return Math.Max(MinMultiplier, multiplier);
+        }
+
+        /// <summary>Automatic growth from the current level (1 at level 1 or without growth config).</summary>
+        public float GetLevelMultiplier(StatType stat)
+        {
+            if (levelGrowth == null) return 1f;
+            var growth = levelGrowth.GetLevelMultiplier(stat, Level);
+            return growth > 0f && !float.IsInfinity(growth) ? growth : 1f;
+        }
+
+        /// <summary>Current size ÷ starting size (1 = not grown yet).</summary>
+        public float SizeRatio
+        {
+            get
+            {
+                var start = baseValue(StatType.Size);
+                return start > 0f ? Get(StatType.Size) / start : 1f;
+            }
+        }
+
+        /// <summary>How much this stat is boosted by size alone. Always 1 for Size itself.</summary>
+        public float GetSizeMultiplier(StatType stat)
+        {
+            if (sizeScaling == null || stat == StatType.Size) return 1f;
+            var strength = sizeScaling.GetSizeStrength(stat);
+            return strength == 0f ? 1f : SizeScaling.Multiplier(SizeRatio, strength);
+        }
+
+        /// <summary>Final value: base × total multiplier, or base ÷ total multiplier for interval stats.</summary>
         public float Get(StatType stat)
         {
             var value = baseValue(stat);
-            var multiplier = GetMultiplier(stat);
+            var multiplier = GetTotalMultiplier(stat);
             return IsInverse(stat) ? value / multiplier : value * multiplier;
         }
 

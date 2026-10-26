@@ -14,6 +14,8 @@ namespace FreedomJam.Game.Player
         [SerializeField] PlayerConfig config;
         [SerializeField] LevelConfig levelConfig;
         [SerializeField] PlayerMouth mouth;
+        [Tooltip("Eat N of a creature → a stat steps up. Creatures not listed give XP only. Empty = eating gives XP only.")]
+        [SerializeField] EatStackConfig eatStackConfig;
         [Tooltip("Without a foundation bootstrap (test scene), respawn after this many seconds instead of ending the run.")]
         [SerializeField] float sandboxRespawnDelay = 1f;
         [Tooltip("Log hits taken and creatures eaten to the Console.")]
@@ -29,6 +31,8 @@ namespace FreedomJam.Game.Player
 
         public PlayerStats Stats { get; private set; }
         public PlayerExperience Experience { get; private set; }
+        /// <summary>Eat counts per creature and their tiers. Null without an EatStackConfig.</summary>
+        public EatStack EatStack { get; private set; }
 
         protected override CharacterData Data => config;
 
@@ -40,6 +44,8 @@ namespace FreedomJam.Game.Player
         public float FireDamage => GetStat(StatType.FireDamage);
         public float MouthTickInterval => GetStat(StatType.MouthTickInterval);
         public float PickupRadius => GetStat(StatType.PickupRadius);
+        /// <summary>Current size ÷ starting size (1 = not grown yet). Used to scale abilities with size.</summary>
+        public float SizeRatio => Stats != null ? Stats.SizeRatio : 1f;
         /// <summary>Mouth cone length; scales with body size (MVP REQ-MOUTH-4).</summary>
         public float MouthRange => config != null ? config.MouthRange * BodySize : 0f;
         public float MouthAngle => config != null ? config.MouthAngle : 0f;
@@ -61,10 +67,17 @@ namespace FreedomJam.Game.Player
             if (levelConfig == null) Debug.LogError("PlayerCharacter needs a LevelConfig. Stats and XP are disabled.", this);
             if (steering == null) Debug.LogWarning("PlayerCharacter has no ISteeringInput component, so it cannot turn.", this);
             if (mouth == null) Debug.LogWarning("PlayerCharacter has no PlayerMouth assigned, so it cannot eat.", this);
+            if (eatStackConfig == null) Debug.LogWarning("PlayerCharacter has no EatStackConfig, so eating gives XP only.", this);
+
+            if (eatStackConfig != null)
+            {
+                EatStack = new EatStack(eatStackConfig);
+                EatStack.TierReached += OnEatTierReached;
+            }
 
             if (config != null && levelConfig != null)
             {
-                Stats = new PlayerStats(config.GetBaseValue, levelConfig);
+                Stats = new PlayerStats(config.GetBaseValue, levelConfig, EatStack, config, levelConfig);
                 Experience = new PlayerExperience(levelConfig);
                 Experience.LeveledUp += Stats.SetLevel;
                 Experience.LeveledUp += OnLevelUp;
@@ -96,6 +109,7 @@ namespace FreedomJam.Game.Player
                 Experience.LeveledUp -= OnLevelUp;
             }
             if (Stats != null) Stats.Changed -= OnStatsChanged;
+            if (EatStack != null) EatStack.TierReached -= OnEatTierReached;
         }
 
         protected override void OnReset()
@@ -175,14 +189,27 @@ namespace FreedomJam.Game.Player
         void OnCreatureEaten(CreatureData creature)
         {
             if (!IsAlive || Stats == null || creature == null) return;
-            foreach (var bonus in creature.eatMultipliers) Stats.AddBonus(bonus.stat, bonus.bonus);
+            // Stats come only from the eat stack; CreatureData.eatMultipliers is no longer used.
+            var stacked = EatStack != null && EatStack.Record(creature);
             Experience.AddXp(creature.xpValue);
 
             if (logEvents)
             {
-                var bonuses = string.Join(", ", creature.eatMultipliers.ConvertAll(b => $"{b.bonus:+0.##;-0.##} {b.stat}"));
-                Debug.Log($"[Player] ate {creature.displayName}: {bonuses}, +{creature.xpValue} XP → level {Experience.Level}, XP {Experience.CurrentXp}/{Experience.XpToNext}", this);
+                var stack = stacked ? $"eaten {EatStack.GetCount(creature)}{NextTierText(creature)}" : "not in Eat Stack Config, XP only";
+                Debug.Log($"[Player] ate {creature.displayName} ({stack}), +{creature.xpValue} XP → level {Experience.Level}, XP {Experience.CurrentXp}/{Experience.XpToNext}", this);
             }
+        }
+
+        string NextTierText(CreatureData creature)
+        {
+            var next = EatStack.GetNextThreshold(creature);
+            return next > 0 ? $"/{next} for next tier" : ", max tier";
+        }
+
+        void OnEatTierReached(CreatureData creature, EatStackTier tier, int tierNumber)
+        {
+            if (logEvents)
+                Debug.Log($"[Player] {creature.displayName} tier {tierNumber} ({tier.EatCount} eaten): {tier.Describe()}", this);
         }
 
         void OnXpCollected(int amount)

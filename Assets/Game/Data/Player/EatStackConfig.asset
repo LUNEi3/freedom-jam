@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b66f5f308e2ce54383726049fead84d, type: 3}
+  m_Name: EatStackConfig
+  m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.EatStackConfig
+  creatures:
+  - label: Blob  (3 tiers)
+    creature: {fileID: 11400000, guid: 5e2dbb40337724829bf94d8955fac6df, type: 2}
+    tiers:
+    - label: "5 eaten \u2192 BaseDamage \xD71.5, Size \xD71.2"
+      eatCount: 5
+      rewards:
+      - label: "BaseDamage \xD71.5"
+        stat: 3
+        multiplier: 1.5
+      - label: "Size \xD71.2"
+        stat: 5
+        multiplier: 1.2
+    - label: "15 eaten \u2192 BaseDamage \xD72, Size \xD71.4"
+      eatCount: 15
+      rewards:
+      - label: "BaseDamage \xD72"
+        stat: 3
+        multiplier: 2
+      - label: "Size \xD71.4"
+        stat: 5
+        multiplier: 1.4
+    - label: "30 eaten \u2192 BaseDamage \xD73, Size \xD71.6"
+      eatCount: 30
+      rewards:
+      - label: "BaseDamage \xD73"
+        stat: 3
+        multiplier: 3
+      - label: "Size \xD71.6"
+        stat: 5
+        multiplier: 1.6
+  - label: Zipper  (2 tiers)
+    creature: {fileID: 11400000, guid: 49da7bb95ac024b53ae0b6eb9b054b15, type: 2}
+    tiers:
+    - label: "5 eaten \u2192 MoveSpeed \xD71.3"
+      eatCount: 5
+      rewards:
+      - label: "MoveSpeed \xD71.3"
+        stat: 1
+        multiplier: 1.3
+    - label: "15 eaten \u2192 MoveSpeed \xD71.6"
+      eatCount: 15
+      rewards:
+      - label: "MoveSpeed \xD71.6"
+        stat: 1
+        multiplier: 1.6
+  - label: Gyro  (2 tiers)
+    creature: {fileID: 11400000, guid: e850da66deb5744a5bb93ee18a8ff47f, type: 2}
+    tiers:
+    - label: "5 eaten \u2192 SteerSpeed \xD71.3"
+      eatCount: 5
+      rewards:
+      - label: "SteerSpeed \xD71.3"
+        stat: 2
+        multiplier: 1.3
+    - label: "15 eaten \u2192 SteerSpeed \xD71.6"
+      eatCount: 15
+      rewards:
+      - label: "SteerSpeed \xD71.6"
+        stat: 2
+        multiplier: 1.6

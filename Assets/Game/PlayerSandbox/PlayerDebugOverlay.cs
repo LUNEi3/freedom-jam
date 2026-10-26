@@ -41,7 +41,7 @@ namespace FreedomJam.Game.PlayerSandbox
         {
             if (player == null || Time.timeScale <= 0f) return;
 
-            GUILayout.BeginArea(new Rect(10, 112, 360, 520), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(10, 112, 470, 520), GUI.skin.box);
             GUILayout.Label("<b>Player sandbox</b>   A / D to steer", Rich);
             GUILayout.Label($"HP {player.CurrentHP:0.#} / {player.MaxHP:0.#}   {(player.IsAlive ? "alive" : "DEAD")}");
 
@@ -53,8 +53,14 @@ namespace FreedomJam.Game.PlayerSandbox
             var stats = player.Stats;
             if (stats != null)
             {
+                // Total multiplier, then where it comes from: eat stack, level growth, size scaling.
+                var eatStack = player.EatStack;
                 foreach (var stat in Stats)
-                    GUILayout.Label($"{stat,-18} {stats.Get(stat),7:0.##}  ×{stats.GetMultiplier(stat):0.##}  (bonus {stats.GetBonus(stat):+0.##;-0.##;0})");
+                {
+                    var stack = eatStack != null ? eatStack.GetMultiplier(stat) : 1f;
+                    GUILayout.Label($"{stat,-18} {stats.Get(stat),7:0.##}  ×{stats.GetTotalMultiplier(stat):0.##}  " +
+                                    $"(eat ×{stack:0.##}  lvl ×{stats.GetLevelMultiplier(stat):0.##}  size ×{stats.GetSizeMultiplier(stat):0.##})");
+                }
             }
 
             var abilities = player.GetComponent<PlayerAbilityController>();
