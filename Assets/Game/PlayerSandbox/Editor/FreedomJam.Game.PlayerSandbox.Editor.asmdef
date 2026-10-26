@@ -1,0 +1,6 @@
+{
+  "name": "FreedomJam.Game.PlayerSandbox.Editor",
+  "rootNamespace": "FreedomJam.Game.PlayerSandbox.Editor",
+  "references": ["FreedomJam.Game", "FreedomJam.Game.PlayerSandbox", "Unity.InputSystem"],
+  "includePlatforms": ["Editor"]
+}

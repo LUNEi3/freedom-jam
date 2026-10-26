@@ -16,11 +16,11 @@ namespace FreedomJam.Game.Player
         [SerializeField] PlayerMouth mouth;
         [Tooltip("Without a foundation bootstrap (test scene), respawn after this many seconds instead of ending the run.")]
         [SerializeField] float sandboxRespawnDelay = 1f;
+        [Tooltip("Log hits taken and creatures eaten to the Console.")]
+        [SerializeField] bool logEvents = true;
 
-        Rigidbody body;
         ISteeringInput steering;
-        Vector3 targetPosition;
-        Quaternion targetRotation;
+        Vector3 prefabScale = Vector3.one;
         float invulnerableUntil;
         float lastMaxHP;
 
@@ -47,8 +47,11 @@ namespace FreedomJam.Game.Player
 
         void Awake()
         {
-            body = GetComponent<Rigidbody>();
+            // Kinematic body only for trigger events; movement sets the transform (architecture §3.6).
+            var body = GetComponent<Rigidbody>();
             body.isKinematic = true;
+            body.interpolation = RigidbodyInterpolation.None;
+            prefabScale = transform.localScale;
             steering = GetComponent<ISteeringInput>();
 
             if (config == null) Debug.LogError("PlayerCharacter needs a PlayerConfig. The player will not move or take damage.", this);
@@ -91,8 +94,7 @@ namespace FreedomJam.Game.Player
         {
             invulnerableUntil = 0f;
             lastMaxHP = MaxHP;
-            targetPosition = transform.position;
-            targetRotation = transform.rotation;
+            ApplyBodyScale();
         }
 
         protected override void Tick(float deltaTime)
@@ -100,19 +102,25 @@ namespace FreedomJam.Game.Player
             if (deltaTime <= 0f) return;
 
             var steer = steering != null ? steering.Steer : 0f;
-            // Keep our own target pose: the Rigidbody pose only updates on the physics step,
-            // so reading it back every frame would drop turns between steps.
-            targetRotation *= Quaternion.Euler(0f, steer * SteerSpeed * deltaTime, 0f);
-            targetPosition += targetRotation * Vector3.forward * (MoveSpeed * deltaTime);
-            body.MoveRotation(targetRotation);
-            body.MovePosition(targetPosition);
+            var rotation = transform.rotation * Quaternion.Euler(0f, steer * SteerSpeed * deltaTime, 0f);
+            transform.SetPositionAndRotation(
+                transform.position + rotation * Vector3.forward * (MoveSpeed * deltaTime),
+                rotation);
         }
+
+        /// <summary>Body radius = BodySize × 0.5 (architecture §3.6): a prefab built 1 unit wide scales with BodySize.</summary>
+        void ApplyBodyScale() => transform.localScale = prefabScale * BodySize;
 
         protected override bool CanReceiveDamage(DamageInfo info) => Time.time >= invulnerableUntil;
 
         protected override void OnDamaged(DamageInfo info)
         {
             if (config != null) invulnerableUntil = Time.time + config.HitInvulnerability;
+            if (logEvents)
+            {
+                var source = info.Source != null ? info.Source.name : "unknown";
+                Debug.Log($"[Player] hit by {source} -{info.Amount:0.##} ({info.Type}) → HP {CurrentHP:0.##}/{MaxHP:0.##}", this);
+            }
         }
 
         protected override void OnDied(DamageInfo killingBlow)
@@ -134,6 +142,12 @@ namespace FreedomJam.Game.Player
             if (!IsAlive || Stats == null || creature == null) return;
             foreach (var bonus in creature.eatMultipliers) Stats.AddBonus(bonus.stat, bonus.bonus);
             Experience.AddXp(creature.xpValue);
+
+            if (logEvents)
+            {
+                var bonuses = string.Join(", ", creature.eatMultipliers.ConvertAll(b => $"{b.bonus:+0.##;-0.##} {b.stat}"));
+                Debug.Log($"[Player] ate {creature.displayName}: {bonuses}, +{creature.xpValue} XP → level {Experience.Level}, XP {Experience.CurrentXp}/{Experience.XpToNext}", this);
+            }
         }
 
         void OnXpCollected(int amount)
@@ -147,6 +161,7 @@ namespace FreedomJam.Game.Player
             var maxHP = MaxHP;
             if (maxHP > lastMaxHP) Heal(maxHP - lastMaxHP);
             lastMaxHP = maxHP;
+            ApplyBodyScale();
         }
 
         float GetStat(StatType stat)

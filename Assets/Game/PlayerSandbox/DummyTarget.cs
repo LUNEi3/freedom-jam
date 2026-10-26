@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FreedomJam.Game.Sandbox
+namespace FreedomJam.Game.PlayerSandbox
 {
     /// <summary>
     /// Test-only target for the player sandbox. Stands still, and on death fakes the enemy track's

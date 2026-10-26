@@ -20,6 +20,8 @@ namespace FreedomJam.Game.Player
         [Header("Debug (Scene view, and Game view with Gizmos on)")]
         [SerializeField] Color gizmoColor = new(1f, 0.5f, 0f, 0.9f);
         [SerializeField] Color biteColor = new(1f, 0.1f, 0.1f, 1f);
+        [Tooltip("Log every bite to the Console (target, damage, HP left).")]
+        [SerializeField] bool logBites = true;
 
         readonly Collider[] hits = new Collider[MaxHits];
         readonly HashSet<IDamageable> seenThisFrame = new();
@@ -75,6 +77,17 @@ namespace FreedomJam.Game.Player
             target.TakeDamage(new DamageInfo(player.BaseDamage, DamageType.Normal, player));
             if (player.FireDamage > 0f && target.IsAlive)
                 target.TakeDamage(new DamageInfo(player.FireDamage, DamageType.Fire, player));
+
+            if (logBites) LogBite(target);
+        }
+
+        void LogBite(IDamageable target)
+        {
+            var targetName = target is Component c ? c.name : target.ToString();
+            var fire = player.FireDamage > 0f ? $" +{player.FireDamage:0.##} fire" : "";
+            var hp = target is Character character ? $"HP {character.CurrentHP:0.##}/{character.MaxHP:0.##}" : "";
+            var result = target.IsAlive ? hp : "DIED";
+            Debug.Log($"[Mouth] bite {targetName} -{player.BaseDamage:0.##}{fire} → {result}", this);
         }
 
         /// <summary>Drop cooldowns that have run out, so the dictionary doesn't grow with pooled enemies.</summary>

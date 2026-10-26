@@ -16,10 +16,11 @@ MonoBehaviour:
   moveSpeed: 3
   bodySize: 1
   steerSpeed: 180
-  baseDamage: 1
+  baseDamage: 2
   fireDamage: 0
   mouthRange: 1.5
   mouthAngle: 90
   mouthTickInterval: 0.5
+  mouthTargetRadius: 0.5
   pickupRadius: 2
   hitInvulnerability: 0.5

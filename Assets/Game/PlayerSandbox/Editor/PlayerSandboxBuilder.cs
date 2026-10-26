@@ -7,27 +7,37 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Object = UnityEngine.Object;
 
-namespace FreedomJam.Game.Sandbox.Editor
+namespace FreedomJam.Game.PlayerSandbox.Editor
 {
     /// <summary>
-    /// Menu: Freedom Jam > Build Player Sandbox.
-    /// Creates the player assets and prefab if they don't exist yet (never overwrites them),
-    /// then rebuilds Assets/Game/Scenes/PlayerSandbox.unity from scratch.
+    /// Menus under Tools > Freedom Jam:
+    /// - Build Player Sandbox: player + still dummies -> PlayerSandbox.unity
+    /// - Build Integration Sandbox: player + the real enemy spawner and XP orbs -> IntegrationSandbox.unity
+    /// Both create the player assets and prefab if they don't exist yet (never overwrite them),
+    /// then rebuild their scene from scratch.
     /// </summary>
     public static class PlayerSandboxBuilder
     {
         const string PlayerDataFolder = "Assets/Game/Data/Player";
-        const string SandboxDataFolder = "Assets/Game/Data/Sandbox";
+        const string SandboxDataFolder = "Assets/Game/PlayerSandbox/Data";
         const string PrefabFolder = "Assets/Game/Prefabs";
-        const string SceneFolder = "Assets/Game/Scenes";
+        const string SceneFolder = "Assets/Game/PlayerSandbox";
         const string PlayerPrefabPath = PrefabFolder + "/Player.prefab";
         const string ScenePath = SceneFolder + "/PlayerSandbox.unity";
+        const string IntegrationScenePath = SceneFolder + "/IntegrationSandbox.unity";
+        const string SpawnConfigPath = "Assets/Game/Data/Spawn/DefaultSpawn.asset";   // Track B asset, read only
+        const string XpOrbPrefabPath = "Assets/Game/Prefabs/XpOrb.prefab";            // Track B asset, read only
         const string InputActionsPath = "Assets/InputSystem_Actions.inputactions";
         const int DummyCount = 6;
         const float DummyRingRadius = 7f;
 
-        [MenuItem("Freedom Jam/Build Player Sandbox")]
-        public static void Build()
+        [MenuItem("Tools/Freedom Jam/Build Player Sandbox")]
+        public static void Build() => BuildScene(ScenePath, withEnemies: false);
+
+        [MenuItem("Tools/Freedom Jam/Build Integration Sandbox")]
+        public static void BuildIntegration() => BuildScene(IntegrationScenePath, withEnemies: true);
+
+        static void BuildScene(string scenePath, bool withEnemies)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
@@ -83,14 +93,42 @@ namespace FreedomJam.Game.Sandbox.Editor
             var player = (GameObject)PrefabUtility.InstantiatePrefab(playerPrefab, scene);
             player.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             SetupCamera(player.transform);
-            for (var i = 0; i < DummyCount; i++) CreateDummy(i, enemyLayer, dummyCreature, dummyMaterial);
 
             var overlay = new GameObject("Debug Overlay").AddComponent<PlayerDebugOverlay>();
             SetReference(overlay, "player", player.GetComponent<PlayerCharacter>());
 
-            EditorSceneManager.SaveScene(scene, ScenePath);
+            if (withEnemies)
+            {
+                var spawner = CreateEnemySystems();
+                if (spawner == null) return;
+                SetReference(overlay, "spawner", spawner);
+            }
+            else
+            {
+                for (var i = 0; i < DummyCount; i++) CreateDummy(i, enemyLayer, dummyCreature, dummyMaterial);
+            }
+
+            EditorSceneManager.SaveScene(scene, scenePath);
             AssetDatabase.SaveAssets();
-            Debug.Log($"Player sandbox built: {ScenePath}. Press Play in this scene to test (no MainMenu needed).");
+            Debug.Log($"Sandbox built: {scenePath}. Press Play in this scene to test (no MainMenu needed).");
+        }
+
+        /// <summary>The enemy track's real spawner and XP orbs, wired the same way as their EnemySandbox.</summary>
+        static Enemy.EnemySpawner CreateEnemySystems()
+        {
+            var spawnConfig = AssetDatabase.LoadAssetAtPath<SpawnConfig>(SpawnConfigPath);
+            var orbPrefab = AssetDatabase.LoadAssetAtPath<Pickups.XpOrb>(XpOrbPrefabPath);
+            if (spawnConfig == null || orbPrefab == null)
+            {
+                Debug.LogError($"Integration sandbox needs {SpawnConfigPath} and {XpOrbPrefabPath} from the enemy track.");
+                return null;
+            }
+
+            var systems = new GameObject("Enemy Systems");
+            var spawner = systems.AddComponent<Enemy.EnemySpawner>();
+            SetReference(spawner, "config", spawnConfig);
+            SetReference(systems.AddComponent<Pickups.XpOrbSpawner>(), "orbPrefab", orbPrefab);
+            return spawner;
         }
 
         static GameObject CreatePlayerPrefab(int playerLayer, int enemyLayer, PlayerConfig config, LevelConfig levelConfig,
@@ -101,7 +139,7 @@ namespace FreedomJam.Game.Sandbox.Editor
             var body = root.AddComponent<Rigidbody>();
             body.isKinematic = true;
             body.useGravity = false;
-            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.interpolation = RigidbodyInterpolation.None;   // movement sets the transform
 
             var hurtbox = root.AddComponent<SphereCollider>();
             hurtbox.isTrigger = true;

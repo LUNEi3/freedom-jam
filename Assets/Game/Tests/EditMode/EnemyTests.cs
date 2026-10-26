@@ -1,0 +1,180 @@
+using System.Collections.Generic;
+using FreedomJam.Game.Enemy;
+using NUnit.Framework;
+using UnityEngine;
+
+namespace FreedomJam.Game.Tests
+{
+    public class EnemyTests
+    {
+        sealed class FakePlayer : IPlayer
+        {
+            public bool inMouth;
+            public Character Character => null;
+            public bool IsInMouth(Vector3 worldPosition) => inMouth;
+            public float PickupRadius => 0f;
+        }
+
+        sealed class TestPlayerData : CharacterData { }
+
+        sealed class TestPlayer : Character, IPlayer
+        {
+            public CharacterData data;
+            protected override CharacterData Data => data;
+            protected override void Tick(float deltaTime) { }
+            protected override void OnDied(DamageInfo killingBlow) { }
+            public Character Character => this;
+            public bool IsInMouth(Vector3 worldPosition) => false;
+            public float PickupRadius => 0f;
+        }
+
+        class TestEnemy : BasicEnemy
+        {
+            public void Step(float deltaTime) => Move(deltaTime);
+        }
+
+        GameObject go;
+        CreatureData creature;
+        BasicEnemy enemy;
+        FakePlayer player;
+        int released;
+
+        [SetUp] public void SetUp()
+        {
+            creature = ScriptableObject.CreateInstance<CreatureData>();
+            creature.maxHP = 5; creature.bodySize = 2; creature.xpValue = 3;
+            go = new GameObject("Enemy");
+            enemy = go.AddComponent<BasicEnemy>();
+            player = new FakePlayer();
+            GameplayContext.RegisterPlayer(player);
+            released = 0;
+        }
+        [TearDown] public void TearDown()
+        {
+            GameplayContext.UnregisterPlayer(player);
+            Object.DestroyImmediate(go); Object.DestroyImmediate(creature);
+        }
+
+        static DamageInfo Hit(float amount) => new DamageInfo(amount, DamageType.Normal, null);
+
+        [Test] public void Initialize_SetsCreatureFullHPAndBodyScale()
+        {
+            enemy.Initialize(creature, _ => released++);
+            Assert.That(enemy.Creature, Is.SameAs(creature)); Assert.That(enemy.IsAlive, Is.True);
+            Assert.That(enemy.CurrentHP, Is.EqualTo(5)); Assert.That(go.transform.localScale, Is.EqualTo(Vector3.one * 2));
+        }
+        [Test] public void Initialize_Twice_DoesNotCompoundBodyScale()
+        {
+            enemy.Initialize(creature, null); enemy.Initialize(creature, null);
+            Assert.That(go.transform.localScale, Is.EqualTo(Vector3.one * 2));
+        }
+        [Test] public void DyingInsideMouth_RaisesEatenOnlyAndReleases()
+        {
+            CreatureData eaten = null; var killed = 0;
+            System.Action<CreatureData> onEaten = c => eaten = c;
+            System.Action<CreatureData, Vector3> onKilled = (_, _) => killed++;
+            GameplayEvents.CreatureEaten += onEaten; GameplayEvents.CreatureKilled += onKilled;
+            try
+            {
+                player.inMouth = true; enemy.Initialize(creature, _ => released++);
+                enemy.TakeDamage(Hit(99));
+                Assert.That(eaten, Is.SameAs(creature)); Assert.That(killed, Is.Zero); Assert.That(released, Is.EqualTo(1));
+            }
+            finally { GameplayEvents.CreatureEaten -= onEaten; GameplayEvents.CreatureKilled -= onKilled; }
+        }
+        [Test] public void DyingOutsideMouth_RaisesKilledAtPositionAndReleases()
+        {
+            var eaten = 0; CreatureData killed = null; var at = Vector3.zero;
+            System.Action<CreatureData> onEaten = _ => eaten++;
+            System.Action<CreatureData, Vector3> onKilled = (c, p) => { killed = c; at = p; };
+            GameplayEvents.CreatureEaten += onEaten; GameplayEvents.CreatureKilled += onKilled;
+            try
+            {
+                go.transform.position = new Vector3(3, 0, 4);
+                enemy.Initialize(creature, _ => released++);
+                enemy.TakeDamage(Hit(99));
+                Assert.That(killed, Is.SameAs(creature)); Assert.That(at, Is.EqualTo(new Vector3(3, 0, 4)));
+                Assert.That(eaten, Is.Zero); Assert.That(released, Is.EqualTo(1));
+            }
+            finally { GameplayEvents.CreatureEaten -= onEaten; GameplayEvents.CreatureKilled -= onKilled; }
+        }
+        [Test] public void NonLethalDamage_DoesNotRelease()
+        {
+            enemy.Initialize(creature, _ => released++); enemy.TakeDamage(Hit(2));
+            Assert.That(enemy.CurrentHP, Is.EqualTo(3)); Assert.That(released, Is.Zero);
+        }
+        [Test] public void Despawn_WithoutPool_DeactivatesInsteadOfDestroying()
+        {
+            enemy.Initialize(creature, null); enemy.Despawn();
+            Assert.That(go.activeSelf, Is.False);
+        }
+
+        // Enemy bodySize 2 (radius 1) + player bodySize 1 (radius 0.5) → contact at 1.5.
+        void WithChaseSetup(System.Action<TestEnemy, GameObject> test)
+        {
+            var playerData = ScriptableObject.CreateInstance<TestPlayerData>(); playerData.bodySize = 1;
+            var playerGo = new GameObject("Player"); var testPlayer = playerGo.AddComponent<TestPlayer>();
+            testPlayer.data = playerData; testPlayer.ResetCharacter();
+            var enemyGo = new GameObject("ChaseEnemy"); var chaser = enemyGo.AddComponent<TestEnemy>();
+            creature.moveSpeed = 3;
+            chaser.Initialize(creature, null);
+            GameplayContext.RegisterPlayer(testPlayer);
+            try { test(chaser, enemyGo); }
+            finally
+            {
+                GameplayContext.UnregisterPlayer(testPlayer);
+                Object.DestroyImmediate(enemyGo); Object.DestroyImmediate(playerGo); Object.DestroyImmediate(playerData);
+            }
+        }
+
+        [Test] public void Move_ChasesAtConstantSpeedAndStopsAtContact() => WithChaseSetup((chaser, enemyGo) =>
+        {
+            enemyGo.transform.position = new Vector3(0, 0, 10);
+            chaser.Step(1f);
+            Assert.That(enemyGo.transform.position.z, Is.EqualTo(7).Within(1e-4));
+            chaser.Step(100f);
+            Assert.That(enemyGo.transform.position.z, Is.EqualTo(1.5f).Within(1e-4));
+            Assert.That(enemyGo.transform.forward.z, Is.EqualTo(-1).Within(1e-4));
+        });
+        [Test] public void Move_FromInsidePlayer_MovesOutToSurface() => WithChaseSetup((chaser, enemyGo) =>
+        {
+            enemyGo.transform.position = new Vector3(0, 0, 0.5f);
+            chaser.Step(0.01f);
+            Assert.That(enemyGo.transform.position.z, Is.EqualTo(1.5f).Within(1e-4));
+        });
+        [Test] public void IsTouchingPlayer_TrueAtContactFalseWhenFar() => WithChaseSetup((chaser, enemyGo) =>
+        {
+            enemyGo.transform.position = new Vector3(1.5f, 0, 0);
+            Assert.That(chaser.IsTouchingPlayer(), Is.True);
+            enemyGo.transform.position = new Vector3(3f, 0, 0);
+            Assert.That(chaser.IsTouchingPlayer(), Is.False);
+        });
+
+        [Test] public void RingPoint_IsOnRingAtCenterHeight()
+        {
+            var center = new Vector3(5, 2, -3);
+            foreach (var angle in new[] { 0f, 0.25f, 0.6f, 1f })
+            {
+                var point = SpawnMath.RingPoint(center, 10, angle);
+                Assert.That(point.y, Is.EqualTo(2));
+                Assert.That(Vector3.Distance(point, center), Is.EqualTo(10).Within(1e-4));
+            }
+        }
+        [Test] public void PickWeighted_SplitsRollByWeight()
+        {
+            var weights = new List<float> { 1, 3 };
+            Assert.That(SpawnMath.PickWeighted(weights, 0f), Is.EqualTo(0));
+            Assert.That(SpawnMath.PickWeighted(weights, 0.24f), Is.EqualTo(0));
+            Assert.That(SpawnMath.PickWeighted(weights, 0.26f), Is.EqualTo(1));
+            Assert.That(SpawnMath.PickWeighted(weights, 1f), Is.EqualTo(1));
+        }
+        [Test] public void PickWeighted_SkipsZeroNegativeAndNaN()
+        {
+            var weights = new List<float> { 0, -2, float.NaN, 5, 0 };
+            Assert.That(SpawnMath.PickWeighted(weights, 0f), Is.EqualTo(3));
+            Assert.That(SpawnMath.PickWeighted(weights, 1f), Is.EqualTo(3));
+            Assert.That(SpawnMath.PickWeighted(new List<float> { 0, -1 }, 0.5f), Is.EqualTo(-1));
+            Assert.That(SpawnMath.PickWeighted(new List<float>(), 0.5f), Is.EqualTo(-1));
+        }
+    }
+}
