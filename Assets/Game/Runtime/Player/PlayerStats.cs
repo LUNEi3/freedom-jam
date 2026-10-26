@@ -15,17 +15,21 @@ namespace FreedomJam.Game.Player
 
         readonly Func<StatType, float> baseValue;
         readonly IStatCaps caps;
+        readonly IStatMultiplierSource extraMultipliers;
         readonly Dictionary<StatType, float> bonuses = new();
 
         public int Level { get; private set; } = 1;
 
-        /// <summary>Raised after a bonus is added or the level changes.</summary>
+        /// <summary>Raised after a bonus is added, the level changes, or the extra multipliers change.</summary>
         public event Action Changed;
 
-        public PlayerStats(Func<StatType, float> baseValue, IStatCaps caps)
+        /// <param name="extraMultipliers">Optional, e.g. the eat stack. Applied on top of the capped eat bonus, not capped itself.</param>
+        public PlayerStats(Func<StatType, float> baseValue, IStatCaps caps, IStatMultiplierSource extraMultipliers = null)
         {
             this.baseValue = baseValue ?? throw new ArgumentNullException(nameof(baseValue));
             this.caps = caps ?? throw new ArgumentNullException(nameof(caps));
+            this.extraMultipliers = extraMultipliers;
+            if (extraMultipliers != null) extraMultipliers.Changed += () => Changed?.Invoke();
         }
 
         public void AddBonus(StatType stat, float bonus)
@@ -55,11 +59,23 @@ namespace FreedomJam.Game.Player
             return Math.Max(MinMultiplier, multiplier);
         }
 
-        /// <summary>Final value: base × multiplier, or base ÷ multiplier for interval stats.</summary>
+        /// <summary>Capped eat bonus × extra multipliers (eat stack), never below MinMultiplier.</summary>
+        public float GetTotalMultiplier(StatType stat)
+        {
+            var multiplier = GetMultiplier(stat);
+            if (extraMultipliers != null)
+            {
+                var extra = extraMultipliers.GetMultiplier(stat);
+                if (extra > 0f && !float.IsInfinity(extra)) multiplier *= extra;
+            }
+            return Math.Max(MinMultiplier, multiplier);
+        }
+
+        /// <summary>Final value: base × total multiplier, or base ÷ total multiplier for interval stats.</summary>
         public float Get(StatType stat)
         {
             var value = baseValue(stat);
-            var multiplier = GetMultiplier(stat);
+            var multiplier = GetTotalMultiplier(stat);
             return IsInverse(stat) ? value / multiplier : value * multiplier;
         }
 

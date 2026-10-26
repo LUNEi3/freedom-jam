@@ -319,6 +319,7 @@ MonoBehaviour:
   config: {fileID: 11400000, guid: b5eaa9ee4804ed74d87e6758675ba364, type: 2}
   levelConfig: {fileID: 11400000, guid: b90d53a20c91c594eae8c119ab4165f2, type: 2}
   mouth: {fileID: 6930301372335681860}
+  eatStackConfig: {fileID: 11400000, guid: 03702d694f7409842ad93068ac0ee95a, type: 2}
   sandboxRespawnDelay: 1
   logEvents: 1
 --- !u!114 &2832678707749965694
