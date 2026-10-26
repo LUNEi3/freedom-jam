@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06ed9dbef59124097ba02117943856af, type: 3}
   m_Name: Zipper
   m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.CreatureData
-  maxHP: 4
+  maxHP: 1
   moveSpeed: 4.5
   bodySize: 0.7
   displayName: Zipper
