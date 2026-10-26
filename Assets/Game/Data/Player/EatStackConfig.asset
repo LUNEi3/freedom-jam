@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: EatStackConfig
   m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.EatStackConfig
   creatures:
-  - label: Ember  (3 tiers)
-    creature: {fileID: 11400000, guid: 7040fc0b5d81049078f6a06cfc2d783d, type: 2}
+  - label: Blob  (3 tiers)
+    creature: {fileID: 11400000, guid: 5e2dbb40337724829bf94d8955fac6df, type: 2}
     tiers:
     - label: "5 eaten \u2192 BaseDamage \xD71.5"
       eatCount: 5
