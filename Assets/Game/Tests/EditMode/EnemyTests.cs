@@ -160,6 +160,11 @@ namespace FreedomJam.Game.Tests
                 Assert.That(Vector3.Distance(point, center), Is.EqualTo(10).Within(1e-4));
             }
         }
+        [Test] public void NextElapsedSeconds_FollowsRunTimerOrCountsOnItsOwn()
+        {
+            Assert.That(SpawnMath.NextElapsedSeconds(5f, 0.5f, null), Is.EqualTo(5.5f));
+            Assert.That(SpawnMath.NextElapsedSeconds(5f, 0.5f, 42f), Is.EqualTo(42f));
+        }
         [Test] public void PickWeighted_SplitsRollByWeight()
         {
             var weights = new List<float> { 1, 3 };

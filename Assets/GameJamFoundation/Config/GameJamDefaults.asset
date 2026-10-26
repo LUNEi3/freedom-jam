@@ -16,7 +16,7 @@ MonoBehaviour:
   gameSceneName: Game
   resultSceneName: Result
   timerMode: 1
-  countdownSeconds: 90
+  countdownSeconds: 120
   initialScore: 0
   bestScoreKey: game-jam-foundation
   bestScoreDefault: 0

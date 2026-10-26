@@ -13,6 +13,10 @@ namespace FreedomJam.Game.Enemy
             return new Vector3(center.x + Mathf.Cos(angle) * radius, center.y, center.z + Mathf.Sin(angle) * radius);
         }
 
+        /// <summary>Spawner clock: follows the run timer when there is a run, otherwise counts on its own (e.g. a sandbox).</summary>
+        public static float NextElapsedSeconds(float elapsed, float deltaTime, float? runElapsed) =>
+            runElapsed ?? elapsed + deltaTime;
+
         /// <summary>Index chosen by roll01 in [0, 1] among positive weights, or -1 if none is positive.</summary>
         public static int PickWeighted(IReadOnlyList<float> weights, float roll01)
         {

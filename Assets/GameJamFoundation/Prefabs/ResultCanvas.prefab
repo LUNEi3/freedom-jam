@@ -1493,6 +1493,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 205360adcf701564292c2268d0d3357c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FreedomJam.Foundation::FreedomJam.Foundation.ResultMenuController
+  titleLabel: {fileID: 5129435925028859255}
   scoreLabel: {fileID: 1073233578624115749}
   bestScoreLabel: {fileID: 3731569092531849108}
   timeLabel: {fileID: 3232142566181369795}

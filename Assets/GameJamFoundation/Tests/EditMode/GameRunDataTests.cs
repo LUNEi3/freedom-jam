@@ -29,6 +29,21 @@ namespace FreedomJam.Foundation.Tests
             Assert.That(run.ElapsedSeconds, Is.EqualTo(10)); Assert.That(run.Advance(5), Is.False);
             Assert.That(run.ElapsedSeconds, Is.EqualTo(10));
         }
+        [Test] public void Countdown_Expiry_IsWon()
+        {
+            config.timerMode = TimerMode.Countdown; config.countdownSeconds = 10;
+            var run = new GameRunData(config);
+            run.Advance(9); Assert.That(run.Outcome, Is.EqualTo(RunOutcome.None));
+            run.Advance(1); Assert.That(run.Outcome, Is.EqualTo(RunOutcome.Won));
+        }
+        [Test] public void Complete_KeepsFirstOutcome()
+        {
+            config.timerMode = TimerMode.Countdown; config.countdownSeconds = 10;
+            var won = new GameRunData(config); won.Advance(10); won.Complete(RunOutcome.Lost);
+            Assert.That(won.Outcome, Is.EqualTo(RunOutcome.Won));
+            var lost = new GameRunData(config); lost.Complete(RunOutcome.Lost); lost.Advance(10);
+            Assert.That(lost.Outcome, Is.EqualTo(RunOutcome.Lost)); Assert.That(lost.ElapsedSeconds, Is.Zero);
+        }
         [Test] public void AddScore_AllowsNegativeDelta()
         {
             var run = new GameRunData(config); run.AddScore(20); run.AddScore(-7);
