@@ -21,6 +21,9 @@ namespace FreedomJam.Game.Enemy
         Action<EnemyCharacter> releaseToPool;
         Vector3 prefabScale;
         bool prefabScaleCaptured;
+        Character suctionTarget;
+        float suctionUntil;
+        float suctionSpeed;
 
         public CreatureData Creature { get; private set; }
         protected override CharacterData Data => Creature;
@@ -71,6 +74,15 @@ namespace FreedomJam.Game.Enemy
             SeparateFromOtherEnemies();
         }
 
+        /// <summary>Temporarily pull this enemy toward a shared Character target, without changing damage state.</summary>
+        public void ApplySuction(Character target, float speed, float duration)
+        {
+            if (!IsAlive || target == null || !target.IsAlive || !(speed > 0f) || !(duration > 0f)) return;
+            suctionTarget = target;
+            suctionSpeed = speed;
+            suctionUntil = Time.time + duration;
+        }
+
         /// <summary>
         /// Default: chase the player on the XZ plane at a constant speed, facing it, and stop at its surface.
         /// An enemy that ends up inside the player's body is moved straight back out to the surface.
@@ -80,13 +92,23 @@ namespace FreedomJam.Game.Enemy
             var player = GameplayContext.Player;
             if (player == null || player.Character == null || !player.Character.IsAlive || deltaTime <= 0f) return;
 
-            var toPlayer = player.Character.transform.position - transform.position;
-            toPlayer.y = 0f;
-            var distance = toPlayer.magnitude;
-            var direction = distance > 0.001f ? toPlayer / distance : transform.forward;
+            if (suctionTarget != null && suctionTarget.IsAlive && Time.time < suctionUntil)
+            {
+                MoveToward(suctionTarget, suctionSpeed, deltaTime);
+                return;
+            }
+            suctionTarget = null;
 
-            var contact = ContactDistance(player.Character);
-            var targetDistance = Mathf.Max(contact, distance - MoveSpeed * deltaTime);
+            MoveToward(player.Character, MoveSpeed, deltaTime);
+        }
+
+        void MoveToward(Character target, float speed, float deltaTime)
+        {
+            var toTarget = target.transform.position - transform.position;
+            toTarget.y = 0f;
+            var distance = toTarget.magnitude;
+            var direction = distance > 0.001f ? toTarget / distance : transform.forward;
+            var targetDistance = Mathf.Max(ContactDistance(target), distance - speed * deltaTime);
             transform.SetPositionAndRotation(
                 transform.position + direction * (distance - targetDistance),
                 Quaternion.LookRotation(direction, Vector3.up));
@@ -144,6 +166,9 @@ namespace FreedomJam.Game.Enemy
 
         protected override void OnReset()
         {
+            suctionTarget = null;
+            suctionUntil = 0f;
+            suctionSpeed = 0f;
             if (!prefabScaleCaptured)
             {
                 prefabScale = transform.localScale;

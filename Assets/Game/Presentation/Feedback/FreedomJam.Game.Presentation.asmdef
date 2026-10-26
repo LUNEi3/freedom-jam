@@ -1,0 +1,5 @@
+{
+  "name": "FreedomJam.Game.Presentation",
+  "rootNamespace": "FreedomJam.Game.Presentation",
+  "references": ["FreedomJam.Game", "Unity.ugui"]
+}

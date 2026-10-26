@@ -9,6 +9,7 @@ namespace FreedomJam.Foundation
         InputAction pauseAction;
         bool pauseInputEnabled = true;
 
+        public bool PauseInputEnabled => pauseInputEnabled;
         public event Action PausePressed;
 
         public void Initialize(InputActionAsset asset)
