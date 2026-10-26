@@ -1,0 +1,5 @@
+{
+  "name": "FreedomJam.Game.PlayerSandbox",
+  "rootNamespace": "FreedomJam.Game.PlayerSandbox",
+  "references": ["FreedomJam.Game", "FreedomJam.Foundation", "Unity.InputSystem"]
+}
