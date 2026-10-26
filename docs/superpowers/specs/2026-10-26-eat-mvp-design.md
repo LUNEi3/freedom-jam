@@ -79,7 +79,7 @@ Resolved **at the moment an enemy's HP reaches 0**, regardless of what dealt the
 
 ### 4.6 Spawning & scaling difficulty
 - **REQ-SPAWN-1** Enemies spawn off-screen in a ring around the player, from an object pool.
-- **REQ-SPAWN-2** Spawn rate, max alive count, and creature mix scale with run time via `AnimationCurve`s on a `SpawnConfig` asset.
+- **REQ-SPAWN-2** Spawn rate, max alive count, and creature mix scale with run time via a phase table on the `EnemySpawner` component (`Prefabs/EnemySpawner.prefab`): each phase sets spawns per second, a max-alive range and a % share per creature.
 - **REQ-SPAWN-3** Enemies too far behind the player are recycled to keep density near the player (player can't turn around quickly).
 
 ### 4.7 XP orbs
@@ -129,7 +129,7 @@ All tuning lives in assets under `Assets/Game/Data/`. Values below are placehold
 
 **`PlayerConfig`**: base value for every stat in §5.1, `mouthRange`, `mouthAngle`, `hitInvulnerability`.
 **`LevelConfig`**: XP-per-level curve, per-stat multiplier caps per level.
-**`SpawnConfig`**: spawn ring radius, despawn distance, spawn-rate / max-alive curves over time, weighted creature list over time.
+**`EnemySpawner` settings** (on the component / prefab): spawn ring radius, despawn distance, and spawn phases (start time, spawns per second, max alive start → end, % per creature).
 
 **Phase 1 placeholder creatures:**
 - **Ember** (fire creature) → `fireDamage` bonus
@@ -146,7 +146,7 @@ Assets/Game/
   Data/            assets: Player/, Creatures/, Spawn/
   Runtime/
     Common/        Character, IDamageable, DamageInfo, IPlayer, GameplayContext, GameplayEvents
-    Data/          CharacterData, CreatureData, StatType, PlayerConfig, LevelConfig, SpawnConfig
+    Data/          CharacterData, CreatureData, StatType, PlayerConfig, LevelConfig
     Player/        PlayerCharacter, PlayerMouth, PlayerStats, PlayerExperience, ConeMath
     Enemy/         EnemyCharacter, BasicEnemy, EnemyContactDamage, EnemySpawner (UnityEngine.Pool)
     Pickups/       XpOrb, XpOrbSpawner
@@ -170,7 +170,7 @@ Designed so each track touches separate folders/prefabs to avoid merge conflicts
 | PlayerCharacter (move + steer), camera | Step 0 contract, CreatureData assets, EnemyCharacter / BasicEnemy (chase) |
 | PlayerMouth (cone tick damage) | Eat/kill resolution in EnemyCharacter.OnDied, events |
 | Player death (+ FinishRun) | EnemyContactDamage |
-| PlayerStats + multipliers + caps | Pooling, EnemySpawner + SpawnConfig |
+| PlayerStats + multipliers + caps | Pooling, EnemySpawner + phase table |
 | PlayerExperience + HUD XP/level | XpOrb drop & pickup |
 
 **Scene ownership:** only one person edits `Game.unity` at a time — Unity scene merges conflict badly. Prefer working in prefabs.
