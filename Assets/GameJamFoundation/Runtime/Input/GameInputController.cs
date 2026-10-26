@@ -7,6 +7,7 @@ namespace FreedomJam.Foundation
     {
         InputActionAsset actions;
         InputAction pauseAction;
+        bool pauseInputEnabled = true;
 
         public event Action PausePressed;
 
@@ -16,6 +17,7 @@ namespace FreedomJam.Foundation
             if (pauseAction != null) pauseAction.performed -= OnPausePerformed;
 
             actions = asset;
+            actions.bindingMask = InputBinding.MaskByGroups("Keyboard&Mouse", "Gamepad");
             var playerMap = actions.FindActionMap("Player", false);
             var systemMap = actions.FindActionMap("System", false);
             if (playerMap == null || systemMap == null)
@@ -37,7 +39,12 @@ namespace FreedomJam.Foundation
             SetMapEnabled("System", state == GameState.Playing || state == GameState.Paused);
         }
 
-        void OnPausePerformed(InputAction.CallbackContext _) => PausePressed?.Invoke();
+        void OnPausePerformed(InputAction.CallbackContext _)
+        {
+            if (pauseInputEnabled) PausePressed?.Invoke();
+        }
+
+        public void SetPauseInputEnabled(bool enabled) => pauseInputEnabled = enabled;
 
         void SetMapEnabled(string mapName, bool enabled)
         {

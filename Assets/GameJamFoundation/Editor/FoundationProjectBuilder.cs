@@ -144,6 +144,7 @@ namespace FreedomJam.Foundation.Editor
             var camera = cameraObject.AddComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(0.055f, 0.07f, 0.105f, 1f);
+            cameraObject.AddComponent<AudioListener>();
 
             var lightObject = new GameObject("Directional Light");
             lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);

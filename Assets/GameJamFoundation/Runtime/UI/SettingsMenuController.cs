@@ -58,9 +58,10 @@ namespace FreedomJam.Foundation
         public void Close()
         {
             SaveSettings();
-            onClose?.Invoke();
+            var closeCallback = onClose;
             onClose = null;
             if (gameObject.activeSelf) gameObject.SetActive(false);
+            closeCallback?.Invoke();
         }
 
         public void SaveSettings()

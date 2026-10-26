@@ -35,7 +35,7 @@ namespace FreedomJam.Foundation
 
         public void OnSettingsClicked()
         {
-            if (settingsMenu != null) settingsMenu.Open(null);
+            if (settingsMenu != null) settingsMenu.Open(SelectDefault);
             else if (settingsPanel != null) settingsPanel.SetActive(true);
         }
 

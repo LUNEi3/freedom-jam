@@ -60,8 +60,8 @@ namespace FreedomJam.Foundation
 
         public void OnSettingsClicked()
         {
-            if (openSettings != null) openSettings();
-            else if (settingsMenu != null) settingsMenu.Open(null);
+            if (settingsMenu != null) settingsMenu.Open(SelectDefault);
+            else openSettings?.Invoke();
         }
 
         public void OnQuitClicked() => flow?.QuitApplication();

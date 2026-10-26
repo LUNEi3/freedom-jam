@@ -140,6 +140,96 @@ namespace FreedomJam.Foundation.Tests
         }
 
         [UnityTest]
+        public IEnumerator PauseSettings_EscapeKeepsRunPausedAndCloseRestoresFocus()
+        {
+            yield return LoadScene("MainMenu");
+            var bootstrap = GameFoundationBootstrap.Instance;
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            menu.playButton.onClick.Invoke();
+            yield return WaitForScene("Game");
+
+            var pause = Object.FindAnyObjectByType<PauseMenuController>();
+            virtualKeyboard = InputSystem.AddDevice<Keyboard>();
+            var keyboardState = new KeyboardState();
+            keyboardState.Press(Key.Escape);
+            InputSystem.QueueStateEvent(virtualKeyboard, keyboardState);
+            yield return null;
+            yield return null;
+            Assert.That(bootstrap.Flow.State, Is.EqualTo(GameState.Paused));
+
+            pause.OnSettingsClicked();
+            var settings = pause.settingsMenu;
+            Assert.That(settings.gameObject.activeSelf, Is.True);
+            keyboardState.Release(Key.Escape);
+            InputSystem.QueueStateEvent(virtualKeyboard, keyboardState);
+            yield return null;
+            keyboardState.Press(Key.Escape);
+            InputSystem.QueueStateEvent(virtualKeyboard, keyboardState);
+            yield return null;
+            yield return null;
+
+            Assert.That(bootstrap.Flow.State, Is.EqualTo(GameState.Paused));
+            Assert.That(settings.gameObject.activeSelf, Is.True);
+
+            settings.Close();
+            yield return null;
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(pause.defaultSelection.gameObject));
+
+            keyboardState.Release(Key.Escape);
+            InputSystem.QueueStateEvent(virtualKeyboard, keyboardState);
+            yield return null;
+            keyboardState.Press(Key.Escape);
+            InputSystem.QueueStateEvent(virtualKeyboard, keyboardState);
+            yield return null;
+            yield return null;
+            Assert.That(bootstrap.Flow.State, Is.EqualTo(GameState.Playing));
+        }
+
+        [UnityTest]
+        public IEnumerator MainMenuSettings_CloseRestoresKeyboardFocus()
+        {
+            yield return LoadScene("MainMenu");
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            menu.OnSettingsClicked();
+            Assert.That(menu.settingsMenu.gameObject.activeSelf, Is.True);
+
+            menu.settingsMenu.Close();
+            yield return null;
+
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(menu.defaultSelection.gameObject));
+        }
+
+        [UnityTest]
+        public IEnumerator ResultSettings_CloseRestoresKeyboardFocus()
+        {
+            yield return LoadScene("MainMenu");
+            var bootstrap = GameFoundationBootstrap.Instance;
+            Object.FindAnyObjectByType<MainMenuController>().playButton.onClick.Invoke();
+            yield return WaitForScene("Game");
+            bootstrap.Flow.FinishRun();
+            yield return WaitForScene("Result");
+            var result = Object.FindAnyObjectByType<ResultMenuController>();
+            result.OnSettingsClicked();
+            Assert.That(result.settingsMenu.gameObject.activeSelf, Is.True);
+
+            result.settingsMenu.Close();
+            yield return null;
+
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(result.defaultSelection.gameObject));
+        }
+
+        [UnityTest]
+        public IEnumerator FoundationScenes_HaveOneAudioListener()
+        {
+            foreach (var sceneName in new[] { "MainMenu", "Game", "Result" })
+            {
+                yield return LoadScene(sceneName);
+                Assert.That(Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length,
+                    Is.EqualTo(1), sceneName + " should have exactly one audio listener.");
+            }
+        }
+
+        [UnityTest]
         public IEnumerator ScoreFinishRestart_FlowsThroughGameAndResult()
         {
             yield return LoadScene("MainMenu");

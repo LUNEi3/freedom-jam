@@ -43,8 +43,28 @@ namespace FreedomJam.Foundation
 
         public void OnSettingsClicked()
         {
-            if (openSettings != null) openSettings();
-            else if (settingsMenu != null) settingsMenu.Open(null);
+            var input = GameFoundationBootstrap.Instance != null
+                ? GameFoundationBootstrap.Instance.InputController
+                : null;
+            input?.SetPauseInputEnabled(false);
+
+            if (settingsMenu != null)
+            {
+                settingsMenu.Open(() =>
+                {
+                    input?.SetPauseInputEnabled(true);
+                    SelectDefault();
+                });
+            }
+            else if (openSettings != null)
+            {
+                openSettings();
+                input?.SetPauseInputEnabled(true);
+            }
+            else
+            {
+                input?.SetPauseInputEnabled(true);
+            }
         }
 
         public void OnQuitToMenuClicked() => flow?.ReturnToMainMenu();
@@ -53,6 +73,12 @@ namespace FreedomJam.Foundation
         {
             if (pausePanel != null) pausePanel.SetActive(state == GameState.Paused);
             if (state == GameState.Paused && defaultSelection != null && EventSystem.current != null)
+                EventSystem.current.SetSelectedGameObject(defaultSelection.gameObject);
+        }
+
+        void SelectDefault()
+        {
+            if (defaultSelection != null && EventSystem.current != null)
                 EventSystem.current.SetSelectedGameObject(defaultSelection.gameObject);
         }
 

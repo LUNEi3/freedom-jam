@@ -101,6 +101,34 @@ namespace FreedomJam.Foundation.Tests
             Assert.That(asset.FindActionMap("System").enabled, Is.False);
         }
 
+        [Test]
+        public void GameplayState_ExcludesUnsupportedDeviceBindings()
+        {
+            var asset = CreateActions();
+            asset.FindAction("Player/Attack").AddBinding("<Joystick>/trigger").WithGroup("Joystick");
+            var controller = new GameInputController();
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            var gamepad = InputSystem.AddDevice<Gamepad>();
+            var joystick = InputSystem.AddDevice<Joystick>();
+
+            try
+            {
+                controller.Initialize(asset);
+                controller.SetGameplayState(GameState.Playing);
+
+                var controls = asset.FindAction("Player/Attack").controls;
+                Assert.That(controls.Any(control => control.device == keyboard), Is.True);
+                Assert.That(controls.Any(control => control.device == gamepad), Is.True);
+                Assert.That(controls.Any(control => control.device == joystick), Is.False);
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(joystick);
+                InputSystem.RemoveDevice(gamepad);
+                InputSystem.RemoveDevice(keyboard);
+            }
+        }
+
         InputActionAsset CreateActions()
         {
             if (serializedActions == null)
