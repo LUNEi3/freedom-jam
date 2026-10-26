@@ -172,11 +172,11 @@
 - Public button handlers are `OnPlayClicked`, `OnSettingsClicked`, `OnQuitClicked`, `OnResumeClicked`, `OnQuitToMenuClicked`, `OnPlayAgainClicked`, and `OnMainMenuClicked`.
 - Menus use UGUI, `InputSystemUIInputModule`, and an explicit default selected control for keyboard/gamepad focus.
 
-- [ ] **Step 1: Write failing PlayMode UI tests** named `MainMenuPlayButton_StartsRun`, `PauseResumeButton_RestoresHUD`, `SettingsControls_SaveAudioAndBindings`, and `ResultButtons_RestartOrReturnToMenu`; assert controller calls and displayed values.
-- [ ] **Step 2: Run those tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform PlayMode -testResults "Temp/foundation-playmode.xml" -quit`; expected: FAIL because controllers/prefabs do not exist.
-- [ ] **Step 3: Implement the five UI controllers and prefabs** with serialized references and event subscriptions removed on disable/destroy.
-- [ ] **Step 4: Run those tests**; expected: PASS; manually verify keyboard, mouse, and gamepad focus navigation.
-- [ ] **Step 5: Commit** `git add Assets/GameJamFoundation/Runtime/UI Assets/GameJamFoundation/Prefabs Assets/GameJamFoundation/Tests/PlayMode` then `git commit -m "feat: add foundation UI"`.
+- [x] **Step 1: Write failing PlayMode UI tests** named `MainMenuPlayButton_StartsRun`, `PauseResumeButton_RestoresHUD`, `SettingsControls_SaveAudioAndBindings`, and `ResultButtons_RestartOrReturnToMenu`; assert controller calls and displayed values.
+- [x] **Step 2: Run those tests** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform PlayMode -testResults "Temp/foundation-playmode.xml" -quit`; expected: FAIL because controllers/prefabs do not exist.
+- [x] **Step 3: Implement the five UI controllers and prefabs** with serialized references and event subscriptions removed on disable/destroy.
+- [x] **Step 4: Run those tests**; expected: PASS; manually verify keyboard, mouse, and gamepad focus navigation.
+- [x] **Step 5: Commit** `git add Assets/GameJamFoundation/Runtime/UI Assets/GameJamFoundation/Prefabs Assets/GameJamFoundation/Tests/PlayMode` then `git commit -m "feat: add foundation UI"`.
 
 ### Task 7: Scenes, default config, integration, and build settings
 
@@ -195,9 +195,9 @@
 - `GameJamDefaults.asset` sets scene names, initial score, timer mode/duration, best-score key/default, and score direction.
 - The README documents `GameFlowController.AddScore`, `SetScore`, and `FinishRun` for game-specific integration.
 
-- [ ] **Step 1: Write failing PlayMode integration tests** named `ScoreFinishRestart_FlowsThroughGameAndResult` and `SceneLoad_KeepsOneBootstrap`; load MainMenu, start a run, add score, finish, assert Result values, restart, assert clean run data, and count one persistent bootstrap after each load.
-- [ ] **Step 2: Run the integration test** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform PlayMode -testResults "Temp/foundation-playmode.xml" -quit`; expected: FAIL because the three scenes and default config are not wired.
-- [ ] **Step 3: Create and wire the three scenes and config asset**; set Build Settings order and leave SampleScene out of the build list.
+- [x] **Step 1: Write failing PlayMode integration tests** named `ScoreFinishRestart_FlowsThroughGameAndResult` and `SceneLoad_KeepsOneBootstrap`; load MainMenu, start a run, add score, finish, assert Result values, restart, assert clean run data, and count one persistent bootstrap after each load.
+- [x] **Step 2: Run the integration test** with `Unity.exe -batchmode -projectPath "C:\Users\Administrator\OneDrive - bu.ac.th\Documents\GitHub\freedom-jam" -runTests -testPlatform PlayMode -testResults "Temp/foundation-playmode.xml" -quit`; expected: FAIL because the three scenes and default config are not wired.
+- [x] **Step 3: Create and wire the three scenes and config asset**; set Build Settings order and leave SampleScene out of the build list.
 - [ ] **Step 4: Add the usage README and run both suites** with the EditMode and PlayMode commands above; expected: all tests pass and the standalone PC build starts in Main Menu.
 - [ ] **Step 5: Manually verify a standalone build**: Play, pause/resume, quit to menu, score/timer/result/restart, volume/mute persistence, binding rebind/reset persistence, and Main Menu/Result Quit. Confirm Editor Play Mode remains open when Quit is selected.
 - [ ] **Step 6: Commit** `git add Assets/GameJamFoundation ProjectSettings/EditorBuildSettings.asset` then `git commit -m "feat: add game jam foundation scenes"`.

@@ -45,7 +45,6 @@ namespace FreedomJam.Foundation
 
         public void SetVolume(AudioBus bus, float normalized)
         {
-            EnsureInitialized();
             var index = GetBusIndex(bus);
             levels[index] = SanitizeLevel(normalized);
             ApplyBus(bus);
@@ -53,7 +52,6 @@ namespace FreedomJam.Foundation
 
         public void SetMuted(AudioBus bus, bool isMuted)
         {
-            EnsureInitialized();
             var index = GetBusIndex(bus);
             muted[index] = isMuted;
             ApplyBus(bus);
@@ -148,7 +146,7 @@ namespace FreedomJam.Foundation
         {
             var index = GetBusIndex(bus);
             var decibels = muted[index] ? MuteFloorDecibels : NormalizedToDecibels(levels[index]);
-            if (!Application.isPlaying) return;
+            if (mixer == null || !Application.isPlaying) return;
             if (!mixer.SetFloat(GetParameterName(bus), decibels))
                 throw new InvalidOperationException("The audio mixer does not expose the " + GetParameterName(bus) + " parameter.");
         }

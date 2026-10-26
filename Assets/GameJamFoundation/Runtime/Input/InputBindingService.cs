@@ -130,6 +130,16 @@ namespace FreedomJam.Foundation
             operation.Start();
         }
 
+        public string GetBindingDisplayString(InputBindingEntry entry)
+        {
+            if (entry == null) throw new ArgumentNullException(nameof(entry));
+            var action = actions.FindAction(entry.ActionMap + "/" + entry.ActionName, false);
+            if (action == null || entry.BindingIndex < 0 || entry.BindingIndex >= action.bindings.Count) return "Unbound";
+            return action.GetBindingDisplayString(entry.BindingIndex);
+        }
+
+        public void CancelRebind() => CancelActiveRebind();
+
         public void SaveOverrides()
         {
             var entries = new List<OverrideEntry>();

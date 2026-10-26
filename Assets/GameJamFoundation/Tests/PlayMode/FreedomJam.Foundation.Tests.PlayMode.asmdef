@@ -1,0 +1,5 @@
+{
+  "name": "FreedomJam.Foundation.Tests.PlayMode",
+  "references": ["FreedomJam.Foundation", "Unity.InputSystem", "UnityEngine.UI"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

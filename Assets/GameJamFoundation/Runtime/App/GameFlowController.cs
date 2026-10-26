@@ -13,6 +13,7 @@ namespace FreedomJam.Foundation
         float timeScaleBeforePause = 1f;
 
         public GameState State { get; private set; } = GameState.Menu;
+        public GameConfig Config => config;
         public GameRunData CurrentRun { get; private set; }
         public event Action<GameState> StateChanged;
         public event Action<GameRunData> RunUpdated;
