@@ -17,6 +17,7 @@ namespace FreedomJam.Game.Player
         readonly IStatCaps caps;
         readonly IStatMultiplierSource extraMultipliers;
         readonly ISizeScaling sizeScaling;
+        readonly IStatGrowth levelGrowth;
         readonly Dictionary<StatType, float> bonuses = new();
 
         public int Level { get; private set; } = 1;
@@ -27,12 +28,13 @@ namespace FreedomJam.Game.Player
         /// <param name="extraMultipliers">Optional, e.g. the eat stack. Applied on top of the capped eat bonus, not capped itself.</param>
         /// <param name="sizeScaling">Optional: stats that also grow with size (see SizeScaling).</param>
         public PlayerStats(Func<StatType, float> baseValue, IStatCaps caps, IStatMultiplierSource extraMultipliers = null,
-            ISizeScaling sizeScaling = null)
+            ISizeScaling sizeScaling = null, IStatGrowth levelGrowth = null)
         {
             this.baseValue = baseValue ?? throw new ArgumentNullException(nameof(baseValue));
             this.caps = caps ?? throw new ArgumentNullException(nameof(caps));
             this.extraMultipliers = extraMultipliers;
             this.sizeScaling = sizeScaling;
+            this.levelGrowth = levelGrowth;
             if (extraMultipliers != null) extraMultipliers.Changed += () => Changed?.Invoke();
         }
 
@@ -72,8 +74,17 @@ namespace FreedomJam.Game.Player
                 var extra = extraMultipliers.GetMultiplier(stat);
                 if (extra > 0f && !float.IsInfinity(extra)) multiplier *= extra;
             }
+            multiplier *= GetLevelMultiplier(stat);
             multiplier *= GetSizeMultiplier(stat);
             return Math.Max(MinMultiplier, multiplier);
+        }
+
+        /// <summary>Automatic growth from the current level (1 at level 1 or without growth config).</summary>
+        public float GetLevelMultiplier(StatType stat)
+        {
+            if (levelGrowth == null) return 1f;
+            var growth = levelGrowth.GetLevelMultiplier(stat, Level);
+            return growth > 0f && !float.IsInfinity(growth) ? growth : 1f;
         }
 
         /// <summary>Current size ÷ starting size (1 = not grown yet).</summary>

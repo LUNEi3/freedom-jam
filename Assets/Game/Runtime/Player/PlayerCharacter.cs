@@ -77,7 +77,7 @@ namespace FreedomJam.Game.Player
 
             if (config != null && levelConfig != null)
             {
-                Stats = new PlayerStats(config.GetBaseValue, levelConfig, EatStack, config);
+                Stats = new PlayerStats(config.GetBaseValue, levelConfig, EatStack, config, levelConfig);
                 Experience = new PlayerExperience(levelConfig);
                 Experience.LeveledUp += Stats.SetLevel;
                 Experience.LeveledUp += OnLevelUp;
