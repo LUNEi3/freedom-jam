@@ -4,6 +4,7 @@
 **Jam theme:** Space Exploration
 **Status:** Draft for Phase 1 (MVP). Creature stats/multipliers TBD.
 **Source diagram:** `docs/superpowers/specs/claude/eat-mvp-diagram.png`
+**Code structure:** `docs/superpowers/specs/2026-10-26-character-architecture.md` — OOP class hierarchy (`Character` superclass), shared contract and file ownership. Where it differs from §7–§8 below, the architecture doc wins.
 
 > **For Claude Code / teammates:** This is the source of truth for the gameplay MVP. Build on top of the existing foundation in `Assets/GameJamFoundation/` (see its `README.md` and `docs/superpowers/specs/2026-10-25-game-jam-foundation-design.md`) — do not modify foundation code unless a requirement below says so. Put all gameplay code under `Assets/Game/`. Anything marked **TBD** must stay data-driven / Inspector-tunable rather than hard-coded.
 
@@ -138,13 +139,16 @@ All tuning lives in assets under `Assets/Game/Data/`. Values below are placehold
 
 ## 7. Architecture
 
+Full class design: see `2026-10-26-character-architecture.md`. Player and enemies both inherit from the abstract `Character` class, which owns HP, damage and death, so there are no separate `PlayerHealth` / `EnemyHealth` classes.
+
 ```
 Assets/Game/
-  Data/            CreatureData, PlayerConfig, LevelConfig, SpawnConfig (+ assets)
+  Data/            assets: Player/, Creatures/, Spawn/
   Runtime/
-    Common/        IDamageable, ObjectPool<T>, StatType enum
-    Player/        PlayerMovement, PlayerMouth, PlayerHealth, PlayerStats, PlayerExperience
-    Enemy/         EnemyController, EnemyHealth, EnemyContactDamage, EnemySpawner
+    Common/        Character, IDamageable, DamageInfo, IPlayer, GameplayContext, GameplayEvents
+    Data/          CharacterData, CreatureData, StatType, PlayerConfig, LevelConfig, SpawnConfig
+    Player/        PlayerCharacter, PlayerMouth, PlayerStats, PlayerExperience, ConeMath
+    Enemy/         EnemyCharacter, BasicEnemy, EnemyContactDamage, EnemySpawner (UnityEngine.Pool)
     Pickups/       XpOrb, XpOrbSpawner
     Camera/        FixedAngleFollowCamera
     UI/            XP bar / level / HP additions to HUD
@@ -157,15 +161,15 @@ Assets/Game/
 - Communicate via C# events, not direct cross-folder references, so Player and Enemy work can proceed independently.
 - Gameplay lives in the foundation's `Game` scene. **Always press Play from `MainMenu`** — the bootstrap only exists there.
 
-## 8. Work split (2 devs, not yet assigned)
+## 8. Work split
 
-Designed so each track touches separate folders/prefabs to avoid merge conflicts. Agree on `Common/` (IDamageable, pool, StatType) first.
+Designed so each track touches separate folders/prefabs to avoid merge conflicts. The shared contract (`Common/`, `CharacterData`, `CreatureData`, `StatType`) is built first as Step 0 — see the architecture doc §2 and §5 for exact file ownership.
 
-| Track A — Player | Track B — Enemy & World |
+| Track A — Player (teammate) | Track B — Enemy & World (LUNEi3) |
 |---|---|
-| PlayerMovement, camera | CreatureData, EnemyController (chase) |
-| PlayerMouth (cone tick damage) | EnemyHealth (eat/kill resolution, events) |
-| PlayerHealth (+ FinishRun) | EnemyContactDamage |
+| PlayerCharacter (move + steer), camera | Step 0 contract, CreatureData assets, EnemyCharacter / BasicEnemy (chase) |
+| PlayerMouth (cone tick damage) | Eat/kill resolution in EnemyCharacter.OnDied, events |
+| Player death (+ FinishRun) | EnemyContactDamage |
 | PlayerStats + multipliers + caps | Pooling, EnemySpawner + SpawnConfig |
 | PlayerExperience + HUD XP/level | XpOrb drop & pickup |
 
