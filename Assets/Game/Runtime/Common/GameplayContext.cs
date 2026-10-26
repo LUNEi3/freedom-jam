@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace FreedomJam.Game
 {
     /// <summary>Where enemies, spawners and pickups find the player without referencing Player/ code.</summary>
@@ -8,5 +10,9 @@ namespace FreedomJam.Game
 
         public static void RegisterPlayer(IPlayer player) => Player = player;
         public static void UnregisterPlayer(IPlayer player) { if (Player == player) Player = null; }
+
+        // Domain Reload is disabled in this project, so statics survive between Play sessions.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() { Player = null; }
     }
 }

@@ -82,6 +82,18 @@ namespace FreedomJam.Game.Tests
             Assert.That(character.IsAlive, Is.True); Assert.That(character.CurrentHP, Is.EqualTo(20));
             Assert.That(character.resetCount, Is.EqualTo(1));
         }
+        [Test] public void ResetCharacter_WithoutData_DoesNothingUntilDataIsSet()
+        {
+            var emptyGo = new GameObject("NoData"); var empty = emptyGo.AddComponent<TestCharacter>();
+            try
+            {
+                Assert.DoesNotThrow(() => empty.ResetCharacter());
+                Assert.That(empty.IsAlive, Is.False); Assert.That(empty.resetCount, Is.Zero);
+                empty.data = data; empty.ResetCharacter();
+                Assert.That(empty.IsAlive, Is.True); Assert.That(empty.CurrentHP, Is.EqualTo(10));
+            }
+            finally { Object.DestroyImmediate(emptyGo); }
+        }
         [Test] public void GameplayContext_OnlyRegisteredPlayerCanUnregister()
         {
             var otherGo = new GameObject("Other"); var other = otherGo.AddComponent<TestCharacter>();

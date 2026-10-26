@@ -25,9 +25,13 @@ namespace FreedomJam.Game
 
         protected virtual void OnEnable() => ResetCharacter();
 
-        /// <summary>Full HP, alive again. Called on enable, so pooled enemies reset on reuse.</summary>
+        /// <summary>
+        /// Full HP, alive again. Called on enable, so pooled enemies reset on reuse.
+        /// Does nothing while Data is null (e.g. a pooled enemy enabled before Initialize); call it again once data is set.
+        /// </summary>
         public void ResetCharacter()
         {
+            if (Data == null) return;
             CurrentHP = MaxHP;
             IsAlive = true;
             OnReset();

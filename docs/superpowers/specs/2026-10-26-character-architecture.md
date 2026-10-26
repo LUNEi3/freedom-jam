@@ -114,9 +114,11 @@ public abstract class Character : MonoBehaviour, IDamageable
 
     protected virtual void OnEnable() => ResetCharacter();
 
-    /// <summary>Full HP, alive again. Called on enable, so pooled enemies reset on reuse.</summary>
+    /// <summary>Full HP, alive again. Called on enable, so pooled enemies reset on reuse.
+    /// Does nothing while Data is null (pooled enemy enabled before Initialize).</summary>
     public void ResetCharacter()
     {
+        if (Data == null) return;
         CurrentHP = MaxHP;
         IsAlive = true;
         OnReset();
@@ -161,6 +163,7 @@ public abstract class Character : MonoBehaviour, IDamageable
 - **REQ-CHAR-2** Subclasses must not declare `Update`, `OnEnable` without calling `base.OnEnable()`, or their own HP fields.
 - **REQ-CHAR-3** `TakeDamage` after death is ignored, so a creature can only die once per life.
 - **REQ-CHAR-4** `ResetCharacter()` makes a pooled object reusable: whatever a subclass sets during a life must be cleared in `OnReset()`.
+- **REQ-CHAR-4b** While `Data` is null, `ResetCharacter()` does nothing and the character stays not alive (no `Tick`). Whoever sets the data afterwards must call `ResetCharacter()` again (see REQ-ECHAR-6).
 
 ### 3.4 Player access and gameplay events
 
@@ -182,6 +185,9 @@ public static class GameplayContext
 
     public static void RegisterPlayer(IPlayer player) => Player = player;
     public static void UnregisterPlayer(IPlayer player) { if (Player == player) Player = null; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() { Player = null; }
 }
 
 // Runtime/Common/GameplayEvents.cs
@@ -194,8 +200,13 @@ public static class GameplayEvents
     public static void RaiseCreatureEaten(CreatureData creature) => CreatureEaten?.Invoke(creature);
     public static void RaiseCreatureKilled(CreatureData creature, Vector3 position) => CreatureKilled?.Invoke(creature, position);
     public static void RaiseXpCollected(int amount) => XpCollected?.Invoke(amount);
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() { CreatureEaten = null; CreatureKilled = null; XpCollected = null; }
 }
 ```
+
+> **Domain Reload is disabled** in this project (`EditorSettings` → Enter Play Mode Options). Static fields and events are **not** cleared between Play sessions. Every new static in `Assets/Game/` must be reset in a `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]` method like the ones above.
 
 | Event / call | Raised by | Listened to by |
 |---|---|---|
@@ -276,7 +287,8 @@ public abstract class EnemyCharacter : Character
     public CreatureData Creature { get; private set; }
     protected override CharacterData Data => Creature;
 
-    /// <summary>Called by the spawner before SetActive(true), so ResetCharacter sees the right data.</summary>
+    /// <summary>Called by the spawner. Sets Creature, then calls ResetCharacter() itself,
+    /// because OnEnable may already have run with no data (prefab instantiated while active).</summary>
     public void Initialize(CreatureData creature, Action<EnemyCharacter> releaseToPool) { ... }
 
     protected override void Tick(float deltaTime) => Move(deltaTime);
@@ -294,7 +306,7 @@ public abstract class EnemyCharacter : Character
 - **REQ-ECHAR-3** `EnemyContactDamage` (separate component) damages the player's `IDamageable` on trigger stay with `new DamageInfo(Creature.contactDamage, DamageType.Normal, enemy)`, at most once per `contactDamageInterval` per enemy. Its timer resets on `OnReset`.
 - **REQ-ECHAR-4** `BasicEnemy : EnemyCharacter` uses the default chase. **Ember and Zipper are both `BasicEnemy` prefabs with different `CreatureData` assets.**
 - **REQ-ECHAR-5** Make a new subclass only for new **behaviour**: override `Move` (e.g. zig-zag, dash), `OnDamaged` (e.g. flee when hurt) or `OnDied` (call `base.OnDied` to keep the eat/kill rule). A different number is a data change, not a subclass.
-- **REQ-ECHAR-6** `EnemySpawner` uses `UnityEngine.Pool.ObjectPool<EnemyCharacter>` per `CreatureData`, calls `Initialize` before activating, and reads rates from `SpawnConfig` (MVP §4.6).
+- **REQ-ECHAR-6** `EnemySpawner` uses `UnityEngine.Pool.ObjectPool<EnemyCharacter>` per `CreatureData` and reads rates from `SpawnConfig` (MVP §4.6). `Initialize` must set `Creature` **and then call `ResetCharacter()`** — never rely on `OnEnable` alone, since it may run before the data is set (REQ-CHAR-4b).
 - **REQ-ECHAR-7** `XpOrbSpawner` listens to `CreatureKilled`; `XpOrb` moves toward the player inside `GameplayContext.Player.PickupRadius` and calls `GameplayEvents.RaiseXpCollected(xp)` on touch (MVP §4.7). Orbs are pooled.
 
 ---
@@ -305,7 +317,7 @@ public abstract class EnemyCharacter : Character
 1. `Assets/Game/Runtime/FreedomJam.Game.asmdef`.
 2. Everything in §3: `DamageInfo`, `IDamageable`, `Character`, `CharacterData`, `StatType` + `StatBonus`, `CreatureData`, `IPlayer`, `GameplayContext`, `GameplayEvents`.
 3. Layers `Player`, `Enemy`, `Pickup` and the collision matrix from §3.6.
-4. `Tests/EditMode/FreedomJam.Game.Tests.EditMode.asmdef` with `CharacterTests` (damage, death fires once, heal clamps, reset) using a small test subclass of `Character`.
+4. `Tests/EditMode/FreedomJam.Game.Tests.EditMode.asmdef` with `CharacterTests` (damage, death fires once, heal clamps, reset, reset without data) using a small test subclass of `Character`.
 
 The Player track doesn't wait for Step 0: pure classes (`PlayerStats`, `PlayerExperience`, `ConeMath`) and their tests need nothing from it.
 
