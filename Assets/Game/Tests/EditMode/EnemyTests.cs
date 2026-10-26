@@ -151,6 +151,37 @@ namespace FreedomJam.Game.Tests
             Assert.That(chaser.IsTouchingPlayer(), Is.False);
         });
 
+        // Suction target (bodySize 1) at x = 20; the player from WithChaseSetup stays at the origin.
+        void WithSuctionTarget(System.Action<TestPlayer> test)
+        {
+            var targetData = ScriptableObject.CreateInstance<TestPlayerData>(); targetData.bodySize = 1;
+            var targetGo = new GameObject("SuctionTarget"); var target = targetGo.AddComponent<TestPlayer>();
+            target.data = targetData; target.ResetCharacter();
+            targetGo.transform.position = new Vector3(20, 0, 0);
+            try { test(target); }
+            finally { Object.DestroyImmediate(targetGo); Object.DestroyImmediate(targetData); }
+        }
+
+        [Test] public void Suction_PullsTowardTargetAtItsSpeedAndStopsAtContact() => WithChaseSetup((chaser, enemyGo) =>
+            WithSuctionTarget(target =>
+            {
+                enemyGo.transform.position = new Vector3(10, 0, 0);
+                chaser.ApplySuction(target, 4f, 10f);
+                chaser.Step(1f);
+                Assert.That(enemyGo.transform.position.x, Is.EqualTo(14f).Within(1e-4));
+                chaser.Step(100f);
+                Assert.That(enemyGo.transform.position.x, Is.EqualTo(18.5f).Within(1e-4));
+            }));
+        [Test] public void Suction_IsClearedWhenReused() => WithChaseSetup((chaser, enemyGo) =>
+            WithSuctionTarget(target =>
+            {
+                enemyGo.transform.position = new Vector3(10, 0, 0);
+                chaser.ApplySuction(target, 4f, 10f);
+                chaser.Initialize(creature, null);
+                chaser.Step(1f);
+                Assert.That(enemyGo.transform.position.x, Is.EqualTo(7f).Within(1e-4));
+            }));
+
         // Second enemy (bodySize 2, radius 1) next to the chaser: the two touch at 2 units apart.
         void WithNeighbour(Vector3 at, System.Action<TestEnemy, GameObject> test)
         {
