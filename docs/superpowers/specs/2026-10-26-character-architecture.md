@@ -211,7 +211,7 @@ public static class GameplayEvents
 | Event / call | Raised by | Listened to by |
 |---|---|---|
 | `GameplayContext.RegisterPlayer` / `UnregisterPlayer` | `PlayerCharacter` in `OnEnable` / `OnDisable` (Track A) | Enemies, spawner, orbs (Track B) |
-| `CreatureEaten` | `EnemyCharacter.OnDied` (Track B) | Player: apply `eatMultipliers` + add `xpValue` (Track A) |
+| `CreatureEaten` | `EnemyCharacter.OnDied` (Track B) | Player: count it in the eat stack (`EatStackConfig`, stepped stat tiers) + add `xpValue` (Track A) |
 | `CreatureKilled` | `EnemyCharacter.OnDied` (Track B) | `XpOrbSpawner` drops an orb (Track B); VFX/SFX |
 | `XpCollected` | `XpOrb` on pickup (Track B) | Player: add XP (Track A) |
 
@@ -242,7 +242,7 @@ public sealed class CreatureData : CharacterData
     public float contactDamageInterval = 1f;
     public int xpValue = 1;
     public int scoreValue = 10;
-    public List<StatBonus> eatMultipliers = new();
+    // eat rewards live in the player's EatStackConfig, not here
 }
 ```
 

@@ -85,8 +85,6 @@ namespace FreedomJam.Game.PlayerSandbox.Editor
                 c.displayName = "Dummy";
                 c.maxHP = 1f;   // one bite: a forward-only player passes a still dummy in about one mouth tick
                 c.xpValue = 3;
-                c.eatMultipliers.Add(new StatBonus { stat = StatType.MoveSpeed, bonus = 0.1f });
-                c.eatMultipliers.Add(new StatBonus { stat = StatType.BaseDamage, bonus = 0.2f });
             });
             var playerMaterial = LoadOrCreateMaterial(SandboxDataFolder + "/SandboxPlayer.mat", new Color(0.2f, 0.55f, 1f));
             var dummyMaterial = LoadOrCreateMaterial(SandboxDataFolder + "/SandboxDummy.mat", new Color(1f, 0.35f, 0.3f));

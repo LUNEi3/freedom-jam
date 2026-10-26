@@ -21,4 +21,3 @@ MonoBehaviour:
   contactDamageInterval: 1.2
   xpValue: 2
   scoreValue: 10
-  eatMultipliers: []

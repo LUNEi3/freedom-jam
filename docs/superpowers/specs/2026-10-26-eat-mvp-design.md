@@ -125,15 +125,16 @@ All tuning lives in assets under `Assets/Game/Data/`. Values below are placehold
 | `bodySize` | float | scales hitbox/hurtbox |
 | `xpValue` | int | |
 | `scoreValue` | int | |
-| `eatMultipliers` | list of `{ stat, bonus }` | granted only when eaten |
 
 **`PlayerConfig`**: base value for every stat in §5.1, `mouthRange`, `mouthAngle`, `hitInvulnerability`.
 **`LevelConfig`**: XP-per-level curve, per-stat multiplier caps per level.
 **`EnemySpawner` settings** (on the component / prefab): spawn ring radius, despawn distance, and spawn phases (start time, spawns per second, max alive start → end, % per creature).
 
-**Phase 1 placeholder creatures:**
-- **Ember** (fire creature) → `fireDamage` bonus
-- **Zipper** (speedy creature) → `moveSpeed` or `steerSpeed` bonus
+**Creatures** (eat rewards per creature come from the player's `EatStackConfig`, not from `CreatureData`):
+- **Blob** (big, slow opener; only spawn for the first 30s)
+- **Ember** (fire creature)
+- **Zipper** (small, fast)
+- **Gyro** (nimble)
 
 ---
 

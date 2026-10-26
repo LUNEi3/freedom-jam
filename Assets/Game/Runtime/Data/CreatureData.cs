@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace FreedomJam.Game
@@ -14,7 +13,6 @@ namespace FreedomJam.Game
         public float contactDamageInterval = 1f;
         public int xpValue = 1;
         public int scoreValue = 10;
-        [Tooltip("Granted only when eaten.")]
-        public List<StatBonus> eatMultipliers = new();
+        // Eat rewards are not set here: the player's EatStackConfig (Track A) decides them per creature.
     }
 }
