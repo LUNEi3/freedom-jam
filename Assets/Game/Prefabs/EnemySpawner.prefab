@@ -55,7 +55,7 @@ MonoBehaviour:
     maxAliveStart: 10
     maxAliveEnd: 12
     creatures:
-    - creature: {fileID: 11400000, guid: 5e2dbb40337724829bf94d8955fac6df, type: 2}
+    - creature: {fileID: 11400000, guid: 7040fc0b5d81049078f6a06cfc2d783d, type: 2}
       percent: 100
     enemyStats:
       hp: 1

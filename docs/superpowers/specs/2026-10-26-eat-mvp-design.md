@@ -131,8 +131,8 @@ All tuning lives in assets under `Assets/Game/Data/`. Values below are placehold
 **`EnemySpawner` settings** (on the component / prefab): spawn ring radius, despawn distance, and spawn phases (start time, spawns per second, max alive start → end, % per creature).
 
 **Creatures** (eat rewards per creature come from the player's `EatStackConfig`, not from `CreatureData`):
-- **Blob** (big, slow opener; only spawn for the first 30s)
-- **Ember** (fire creature)
+- **Blob** (big, slow; joins at 0:30)
+- **Ember** (fire creature; the opener — the only spawn for the first 30s, XP only when eaten)
 - **Zipper** (small, fast)
 - **Gyro** (nimble)
 
