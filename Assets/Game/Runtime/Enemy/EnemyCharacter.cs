@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using FreedomJam.Foundation;
 using UnityEngine;
 
@@ -11,6 +12,12 @@ namespace FreedomJam.Game.Enemy
     [RequireComponent(typeof(Rigidbody))]
     public abstract class EnemyCharacter : Character
     {
+        // Enabled enemies, for enemy↔enemy separation. Statics survive play mode without domain reload.
+        static readonly HashSet<EnemyCharacter> Active = new();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => Active.Clear();
+
         Action<EnemyCharacter> releaseToPool;
         Vector3 prefabScale;
         bool prefabScaleCaptured;
@@ -26,8 +33,17 @@ namespace FreedomJam.Game.Enemy
         {
             Creature = creature;
             this.releaseToPool = releaseToPool;
+            Active.Add(this);
             ResetCharacter();
         }
+
+        protected override void OnEnable()
+        {
+            Active.Add(this);
+            base.OnEnable();
+        }
+
+        void OnDisable() => Active.Remove(this);
 
         /// <summary>Return to the pool without eat/kill, e.g. when left too far behind the player.</summary>
         public void Despawn()
@@ -49,7 +65,11 @@ namespace FreedomJam.Game.Enemy
             return offset.magnitude <= ContactDistance(player.Character) + tolerance;
         }
 
-        protected override void Tick(float deltaTime) => Move(deltaTime);
+        protected override void Tick(float deltaTime)
+        {
+            Move(deltaTime);
+            SeparateFromOtherEnemies();
+        }
 
         /// <summary>
         /// Default: chase the player on the XZ plane at a constant speed, facing it, and stop at its surface.
@@ -70,6 +90,56 @@ namespace FreedomJam.Game.Enemy
             transform.SetPositionAndRotation(
                 transform.position + direction * (distance - targetDistance),
                 Quaternion.LookRotation(direction, Vector3.up));
+        }
+
+        /// <summary>
+        /// Enemy↔enemy collision (§3.6): move half of each overlap away from the other body on the XZ plane;
+        /// the other enemy moves the other half on its own Tick. Never ends inside the player.
+        /// </summary>
+        void SeparateFromOtherEnemies()
+        {
+            var position = transform.position;
+            var radius = BodySize * 0.5f;
+            var push = Vector3.zero;
+            foreach (var other in Active)
+            {
+                // Destroyed or pooled (inactive) enemies may linger in edit mode, where OnDisable is not called.
+                if (other == null || other == this || !other.IsAlive || !other.gameObject.activeInHierarchy) continue;
+
+                var offset = position - other.transform.position;
+                offset.y = 0f;
+                var minDistance = radius + other.BodySize * 0.5f;
+                var sqrDistance = offset.sqrMagnitude;
+                if (sqrDistance >= minDistance * minDistance) continue;
+
+                var distance = Mathf.Sqrt(sqrDistance);
+                var away = distance > 0.001f ? offset / distance : RandomFlatDirection();
+                push += away * ((minDistance - distance) * 0.5f);
+            }
+            if (push != Vector3.zero) transform.position = OutsidePlayer(position + push);
+        }
+
+        Vector3 OutsidePlayer(Vector3 position)
+        {
+            var player = GameplayContext.Player;
+            if (player == null || player.Character == null || !player.Character.IsAlive) return position;
+
+            var center = player.Character.transform.position;
+            var offset = position - center;
+            offset.y = 0f;
+            var distance = offset.magnitude;
+            var contact = ContactDistance(player.Character);
+            if (distance >= contact || distance <= 0.001f) return position;
+
+            var surface = center + offset / distance * contact;
+            surface.y = position.y;
+            return surface;
+        }
+
+        static Vector3 RandomFlatDirection()
+        {
+            var circle = UnityEngine.Random.insideUnitCircle.normalized;
+            return circle == Vector2.zero ? Vector3.right : new Vector3(circle.x, 0f, circle.y);
         }
 
         protected override void OnReset()
