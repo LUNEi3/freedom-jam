@@ -69,6 +69,26 @@ namespace FreedomJam.Game.Tests
             enemy.Initialize(creature, null); enemy.Initialize(creature, null);
             Assert.That(go.transform.localScale, Is.EqualTo(Vector3.one * 2));
         }
+        [Test] public void Initialize_WithStatMultipliers_ScalesHpSpeedSizeAndDamage()
+        {
+            creature.moveSpeed = 3; creature.contactDamage = 1;
+            enemy.Initialize(creature, null, new EnemyStatMultipliers { hp = 2f, damage = 1.5f, speed = 1.5f, size = 1.25f });
+            Assert.That(enemy.MaxHP, Is.EqualTo(10)); Assert.That(enemy.CurrentHP, Is.EqualTo(10));
+            Assert.That(enemy.MoveSpeed, Is.EqualTo(4.5f).Within(1e-5)); Assert.That(enemy.ContactDamage, Is.EqualTo(1.5f).Within(1e-5));
+            Assert.That(enemy.BodySize, Is.EqualTo(2.5f).Within(1e-5)); Assert.That(go.transform.localScale.x, Is.EqualTo(2.5f).Within(1e-5));
+        }
+        [Test] public void Reuse_TakesNewStatMultipliers()
+        {
+            enemy.Initialize(creature, null, new EnemyStatMultipliers { hp = 2f, damage = 2f, speed = 2f, size = 2f });
+            enemy.Initialize(creature, null);
+            Assert.That(enemy.MaxHP, Is.EqualTo(5)); Assert.That(enemy.CurrentHP, Is.EqualTo(5));
+            Assert.That(go.transform.localScale, Is.EqualTo(Vector3.one * 2));
+        }
+        [Test] public void UnsetStatMultipliers_CountAsOne()
+        {
+            enemy.Initialize(creature, null, default);
+            Assert.That(enemy.MaxHP, Is.EqualTo(5)); Assert.That(enemy.BodySize, Is.EqualTo(2));
+        }
         [Test] public void DyingInsideMouth_RaisesEatenOnlyAndReleases()
         {
             CreatureData eaten = null; var killed = 0;
@@ -236,6 +256,48 @@ namespace FreedomJam.Game.Tests
         {
             Assert.That(SpawnMath.NextElapsedSeconds(5f, 0.5f, null), Is.EqualTo(5.5f));
             Assert.That(SpawnMath.NextElapsedSeconds(5f, 0.5f, 42f), Is.EqualTo(42f));
+        }
+        static List<EnemySpawner.SpawnPhase> Phases(params (float start, int maxStart, int maxEnd)[] specs)
+        {
+            var list = new List<EnemySpawner.SpawnPhase>();
+            foreach (var (start, maxStart, maxEnd) in specs)
+                list.Add(new EnemySpawner.SpawnPhase { startTime = start, maxAliveStart = maxStart, maxAliveEnd = maxEnd });
+            return list;
+        }
+
+        [Test] public void FindPhase_PicksLatestStartedPhaseInAnyOrder()
+        {
+            var phases = Phases((60, 0, 0), (0, 0, 0), (30, 0, 0));
+            Assert.That(SpawnMath.FindPhase(phases, 0f), Is.EqualTo(1));
+            Assert.That(SpawnMath.FindPhase(phases, 29.9f), Is.EqualTo(1));
+            Assert.That(SpawnMath.FindPhase(phases, 30f), Is.EqualTo(2));
+            Assert.That(SpawnMath.FindPhase(phases, 999f), Is.EqualTo(0));
+            Assert.That(SpawnMath.FindPhase(Phases((10, 0, 0), (20, 0, 0)), 5f), Is.EqualTo(0));
+            Assert.That(SpawnMath.FindPhase(new List<EnemySpawner.SpawnPhase> { null }, 5f), Is.EqualTo(-1));
+        }
+        [Test] public void PhaseEnd_IsNextStartOrInfinity()
+        {
+            var phases = Phases((60, 0, 0), (0, 0, 0), (30, 0, 0));
+            Assert.That(SpawnMath.PhaseEnd(phases, 1), Is.EqualTo(30f));
+            Assert.That(SpawnMath.PhaseEnd(phases, 2), Is.EqualTo(60f));
+            Assert.That(SpawnMath.PhaseEnd(phases, 0), Is.EqualTo(float.PositiveInfinity));
+        }
+        [Test] public void MaxAliveAt_RampsWithinEachPhase()
+        {
+            var phases = Phases((0, 10, 12), (30, 12, 20));
+            Assert.That(SpawnMath.PhaseAt(phases, 10f), Is.SameAs(phases[0]));
+            Assert.That(SpawnMath.PhaseAt(phases, 45f), Is.SameAs(phases[1]));
+            Assert.That(SpawnMath.MaxAliveAt(phases, 30f, 0f), Is.EqualTo(10));
+            Assert.That(SpawnMath.MaxAliveAt(phases, 30f, 15f), Is.EqualTo(11));
+            Assert.That(SpawnMath.MaxAliveAt(phases, 30f, 30f), Is.EqualTo(12));
+            Assert.That(SpawnMath.MaxAliveAt(phases, 30f, 45f), Is.EqualTo(16));
+            Assert.That(SpawnMath.MaxAliveAt(phases, 30f, 999f), Is.EqualTo(20));
+        }
+        [Test] public void NoPhases_SpawnsNothing()
+        {
+            var phases = new List<EnemySpawner.SpawnPhase>();
+            Assert.That(SpawnMath.PhaseAt(phases, 5f), Is.Null);
+            Assert.That(SpawnMath.MaxAliveAt(phases, 30f, 5f), Is.Zero);
         }
         [Test] public void PickWeighted_SplitsRollByWeight()
         {

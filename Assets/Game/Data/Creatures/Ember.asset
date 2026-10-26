@@ -21,6 +21,3 @@ MonoBehaviour:
   contactDamageInterval: 1
   xpValue: 2
   scoreValue: 10
-  eatMultipliers:
-  - stat: 4
-    bonus: 0.1

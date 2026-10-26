@@ -35,8 +35,7 @@ namespace FreedomJam.Game.PlayerSandbox.Editor
         const string PlayerPrefabPath = PrefabFolder + "/Player.prefab";
         const string ScenePath = SceneFolder + "/PlayerSandbox.unity";
         const string IntegrationScenePath = SceneFolder + "/IntegrationSandbox.unity";
-        const string SpawnConfigPath = "Assets/Game/Data/Spawn/DefaultSpawn.asset";   // Track B asset, read only
-        const string XpOrbPrefabPath = "Assets/Game/Prefabs/XpOrb.prefab";            // Track B asset, read only
+        const string EnemySpawnerPrefabPath = "Assets/Game/Prefabs/EnemySpawner.prefab";   // Track B prefab (spawn table + XP orbs), read only
         const string InputActionsPath = "Assets/InputSystem_Actions.inputactions";
         const int DummyCount = 6;
         const float DummyRingRadius = 7f;
@@ -86,8 +85,6 @@ namespace FreedomJam.Game.PlayerSandbox.Editor
                 c.displayName = "Dummy";
                 c.maxHP = 1f;   // one bite: a forward-only player passes a still dummy in about one mouth tick
                 c.xpValue = 3;
-                c.eatMultipliers.Add(new StatBonus { stat = StatType.MoveSpeed, bonus = 0.1f });
-                c.eatMultipliers.Add(new StatBonus { stat = StatType.BaseDamage, bonus = 0.2f });
             });
             var playerMaterial = LoadOrCreateMaterial(SandboxDataFolder + "/SandboxPlayer.mat", new Color(0.2f, 0.55f, 1f));
             var dummyMaterial = LoadOrCreateMaterial(SandboxDataFolder + "/SandboxDummy.mat", new Color(1f, 0.35f, 0.3f));
@@ -139,22 +136,16 @@ namespace FreedomJam.Game.PlayerSandbox.Editor
             Debug.Log($"Sandbox built: {scenePath}. Press Play in this scene to test (no MainMenu needed).");
         }
 
-        /// <summary>The enemy track's real spawner and XP orbs, wired the same way as their EnemySandbox.</summary>
+        /// <summary>The enemy track's real spawner (with its phase table) and XP orbs, from their prefab.</summary>
         static Enemy.EnemySpawner CreateEnemySystems()
         {
-            var spawnConfig = AssetDatabase.LoadAssetAtPath<SpawnConfig>(SpawnConfigPath);
-            var orbPrefab = AssetDatabase.LoadAssetAtPath<Pickups.XpOrb>(XpOrbPrefabPath);
-            if (spawnConfig == null || orbPrefab == null)
+            var prefab = AssetDatabase.LoadAssetAtPath<Enemy.EnemySpawner>(EnemySpawnerPrefabPath);
+            if (prefab == null)
             {
-                Debug.LogError($"Integration sandbox needs {SpawnConfigPath} and {XpOrbPrefabPath} from the enemy track.");
+                Debug.LogError($"Integration sandbox needs {EnemySpawnerPrefabPath} from the enemy track.");
                 return null;
             }
-
-            var systems = new GameObject("Enemy Systems");
-            var spawner = systems.AddComponent<Enemy.EnemySpawner>();
-            SetReference(spawner, "config", spawnConfig);
-            SetReference(systems.AddComponent<Pickups.XpOrbSpawner>(), "orbPrefab", orbPrefab);
-            return spawner;
+            return ((GameObject)PrefabUtility.InstantiatePrefab(prefab.gameObject)).GetComponent<Enemy.EnemySpawner>();
         }
 
         static GameObject CreatePlayerPrefab(int playerLayer, int enemyLayer, PlayerConfig config, LevelConfig levelConfig,

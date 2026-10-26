@@ -38,7 +38,7 @@ CharacterData (abstract ScriptableObject)                    SHARED CONTRACT
 |---|---|---|
 | **Shared contract** | Created once in Step 0 (§5), then changed only when **both** devs agree | `Runtime/Common/*`, `Runtime/Data/CharacterData.cs`, `Runtime/Data/CreatureData.cs`, `Runtime/Data/StatType.cs`, `Runtime/FreedomJam.Game.asmdef`, layers in `ProjectSettings/TagManager.asset` |
 | **Track A — Player** (teammate) | Player dev | `Runtime/Player/*`, `Runtime/Camera/*`, `Runtime/UI/*`, `Runtime/Data/PlayerConfig.cs`, `Runtime/Data/LevelConfig.cs`, `Prefabs/Player.prefab`, `Data/Player/*` assets, `Tests/EditMode/Player*` |
-| **Track B — Enemy & World** (LUNEi3) | Enemy dev | `Runtime/Enemy/*`, `Runtime/Pickups/*`, `Runtime/Data/SpawnConfig.cs`, `Prefabs/Enemy_*.prefab`, `Prefabs/XpOrb.prefab`, `Data/Creatures/*` and `Data/Spawn/*` assets, `Art/Materials/*` (placeholder), `Sandbox/*` (test-only scene and stand-in player, not used by the game), `Tests/EditMode/Enemy*` |
+| **Track B — Enemy & World** (LUNEi3) | Enemy dev | `Runtime/Enemy/*`, `Runtime/Pickups/*`, `Prefabs/Enemy_*.prefab`, `Prefabs/EnemySpawner.prefab` (spawn phase table), `Prefabs/XpOrb.prefab`, `Data/Creatures/*` assets, `Art/Materials/*` (placeholder), `Sandbox/*` (test-only scene and stand-in player, not used by the game), `Tests/EditMode/Enemy*` |
 | **`Game.unity` scene** | One person at a time — say so in chat before opening it | `Assets/GameJamFoundation/Scenes/Game.unity` |
 
 All paths above are under `Assets/Game/` unless written in full.
@@ -211,7 +211,7 @@ public static class GameplayEvents
 | Event / call | Raised by | Listened to by |
 |---|---|---|
 | `GameplayContext.RegisterPlayer` / `UnregisterPlayer` | `PlayerCharacter` in `OnEnable` / `OnDisable` (Track A) | Enemies, spawner, orbs (Track B) |
-| `CreatureEaten` | `EnemyCharacter.OnDied` (Track B) | Player: apply `eatMultipliers` + add `xpValue` (Track A) |
+| `CreatureEaten` | `EnemyCharacter.OnDied` (Track B) | Player: count it in the eat stack (`EatStackConfig`, stepped stat tiers) + add `xpValue` (Track A) |
 | `CreatureKilled` | `EnemyCharacter.OnDied` (Track B) | `XpOrbSpawner` drops an orb (Track B); VFX/SFX |
 | `XpCollected` | `XpOrb` on pickup (Track B) | Player: add XP (Track A) |
 
@@ -242,7 +242,7 @@ public sealed class CreatureData : CharacterData
     public float contactDamageInterval = 1f;
     public int xpValue = 1;
     public int scoreValue = 10;
-    public List<StatBonus> eatMultipliers = new();
+    // eat rewards live in the player's EatStackConfig, not here
 }
 ```
 
@@ -309,7 +309,7 @@ public abstract class EnemyCharacter : Character
 - **REQ-ECHAR-3** `EnemyContactDamage` (separate component) damages the player with `new DamageInfo(Creature.contactDamage, DamageType.Normal, enemy)` while `EnemyCharacter.IsTouchingPlayer()` is true (body distance, not trigger events — an enemy resting exactly at the surface may not register a physics overlap), at most once per `contactDamageInterval` per enemy. Its timer resets when the enemy is re-enabled from the pool.
 - **REQ-ECHAR-4** `BasicEnemy : EnemyCharacter` uses the default chase. **Ember and Zipper are both `BasicEnemy` prefabs with different `CreatureData` assets.**
 - **REQ-ECHAR-5** Make a new subclass only for new **behaviour**: override `Move` (e.g. zig-zag, dash), `OnDamaged` (e.g. flee when hurt) or `OnDied` (call `base.OnDied` to keep the eat/kill rule). A different number is a data change, not a subclass.
-- **REQ-ECHAR-6** `EnemySpawner` uses `UnityEngine.Pool.ObjectPool<EnemyCharacter>` per `CreatureData` and reads rates from `SpawnConfig` (MVP §4.6). `Initialize` must set `Creature` **and then call `ResetCharacter()`** — never rely on `OnEnable` alone, since it may run before the data is set (REQ-CHAR-4b).
+- **REQ-ECHAR-6** `EnemySpawner` uses `UnityEngine.Pool.ObjectPool<EnemyCharacter>` per `CreatureData` (MVP §4.6). Its spawn settings are edited on the component itself (like `PlayerAbilityController`), and `Prefabs/EnemySpawner.prefab` holds the game's table, so every scene uses the same one. The table is a timeline of **phases** (run time in seconds): each phase has a `startTime`, `spawnsPerSecond`, a max-alive cap that rises smoothly from `maxAliveStart` to `maxAliveEnd` over the phase (the last phase over `lastPhaseRampSeconds`, then holds), and per-creature `percent` shares (scaled if they don't add up to 100). The active phase is the latest one whose `startTime` has passed; run time follows the foundation run timer when there is a run. Each phase also has `enemyStats` multipliers (HP, contact damage, speed, size; default ×1) applied to enemies **spawned** in that phase through `Initialize(creature, release, stats)`; `EnemyCharacter` overrides `MaxHP` / `MoveSpeed` / `BodySize` and exposes `ContactDamage`, so full HP, body scale, contact distance and separation all follow. Enemies already alive keep their multipliers; a reused pooled enemy takes the new phase's. `Initialize` must set `Creature` **and then call `ResetCharacter()`** — never rely on `OnEnable` alone, since it may run before the data is set (REQ-CHAR-4b).
 - **REQ-ECHAR-7** `XpOrbSpawner` listens to `CreatureKilled`; `XpOrb` moves toward the player inside `GameplayContext.Player.PickupRadius` and calls `GameplayEvents.RaiseXpCollected(xp)` on touch (MVP §4.7). Orbs are pooled.
 
 ---
@@ -330,7 +330,7 @@ The Player track doesn't wait for Step 0: pure classes (`PlayerStats`, `PlayerEx
 |---|---|
 | `PlayerConfig`, `PlayerStats`, `PlayerExperience`, `ConeMath` + tests | `EnemyCharacter`, `BasicEnemy`, `EnemyContactDamage` |
 | `PlayerCharacter` (move, steer, register) + `Player.prefab` | Ember + Zipper `CreatureData` assets and prefabs |
-| `PlayerMouth` + gizmo | `SpawnConfig`, `EnemySpawner` with pooling |
+| `PlayerMouth` + gizmo | `EnemySpawner` (phase table) with pooling |
 | Fixed follow camera | `XpOrb`, `XpOrbSpawner` |
 | HUD: HP, XP bar, level | |
 

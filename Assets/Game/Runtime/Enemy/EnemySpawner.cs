@@ -8,12 +8,55 @@ using Random = UnityEngine.Random;
 namespace FreedomJam.Game.Enemy
 {
     /// <summary>
-    /// Spawns pooled enemies on a ring around the player, ramping up over run time (MVP §4.6),
+    /// Spawns pooled enemies on a ring around the player following a timeline of spawn phases (MVP §4.6),
     /// and recycles enemies left too far behind. Run time comes from the foundation run timer when there is one.
+    /// The phase table is edited on this component; Prefabs/EnemySpawner.prefab holds the game's table.
     /// </summary>
     public sealed class EnemySpawner : MonoBehaviour
     {
-        [SerializeField] SpawnConfig config;
+        [Serializable]
+        public struct CreatureShare
+        {
+            public CreatureData creature;
+            [Tooltip("Share of this phase's spawns in %. Shares are scaled if they don't add up to 100.")]
+            [Min(0f)] public float percent;
+        }
+
+        [Serializable]
+        public sealed class SpawnPhase
+        {
+            [Tooltip("Filled in automatically from the phase times.")]
+            public string label;
+            [Tooltip("Run time in seconds when this phase begins.")]
+            [Min(0f)] public float startTime;
+            [Min(0f)] public float spawnsPerSecond = 1f;
+            [Tooltip("Max enemies alive when the phase begins. Rises smoothly to Max Alive End by the time the phase ends.")]
+            [Min(0)] public int maxAliveStart = 10;
+            [Min(0)] public int maxAliveEnd = 12;
+            public List<CreatureShare> creatures = new List<CreatureShare>();
+            [Tooltip("Multipliers for enemies spawned during this phase, on top of their creature stats. Enemies already alive keep theirs.")]
+            public EnemyStatMultipliers enemyStats = EnemyStatMultipliers.One;
+        }
+
+        [Header("Spawn area")]
+        [Tooltip("Enemies appear on this ring around the player; keep it outside the camera view.")]
+        [SerializeField, Min(0f)] float spawnRingRadius = 18f;
+        [Tooltip("Enemies further than this from the player are recycled (MVP REQ-SPAWN-3).")]
+        [SerializeField, Min(0f)] float despawnDistance = 30f;
+
+        [Header("Phases (run time in seconds; each runs until the next one starts)")]
+        [Tooltip("The last phase has no next phase to end it: its max alive reaches Max Alive End after this many seconds, then holds.")]
+        [SerializeField, Min(0f)] float lastPhaseRampSeconds = 30f;
+        [SerializeField] List<SpawnPhase> phases = new List<SpawnPhase>
+        {
+            new SpawnPhase { startTime = 0f, spawnsPerSecond = 1f, maxAliveStart = 10, maxAliveEnd = 12 },
+            new SpawnPhase { startTime = 30f, spawnsPerSecond = 1.5f, maxAliveStart = 12, maxAliveEnd = 20,
+                enemyStats = new EnemyStatMultipliers { hp = 1.25f, damage = 1.25f, speed = 1.1f, size = 1.1f } },
+            new SpawnPhase { startTime = 60f, spawnsPerSecond = 2.5f, maxAliveStart = 20, maxAliveEnd = 35,
+                enemyStats = new EnemyStatMultipliers { hp = 1.5f, damage = 1.5f, speed = 1.2f, size = 1.2f } },
+            new SpawnPhase { startTime = 90f, spawnsPerSecond = 4f, maxAliveStart = 35, maxAliveEnd = 50,
+                enemyStats = new EnemyStatMultipliers { hp = 2f, damage = 2f, speed = 1.3f, size = 1.3f } },
+        };
 
         readonly Dictionary<CreatureData, ObjectPool<EnemyCharacter>> pools = new();
         readonly List<EnemyCharacter> alive = new();
@@ -23,6 +66,10 @@ namespace FreedomJam.Game.Enemy
 
         public int AliveCount => alive.Count;
         public float ElapsedSeconds { get; private set; }
+        /// <summary>Phase active right now, or null if there are no phases.</summary>
+        public SpawnPhase CurrentPhase => SpawnMath.PhaseAt(phases, ElapsedSeconds);
+        /// <summary>Max enemies alive right now.</summary>
+        public int CurrentMaxAlive => SpawnMath.MaxAliveAt(phases, lastPhaseRampSeconds, ElapsedSeconds);
 
         void Awake() => release = Release;
 
@@ -30,14 +77,17 @@ namespace FreedomJam.Game.Enemy
         {
             var player = GameplayContext.Player;
             var deltaTime = Time.deltaTime;
-            if (config == null || player == null || player.Character == null || !player.Character.IsAlive || deltaTime <= 0f) return;
+            if (player == null || player.Character == null || !player.Character.IsAlive || deltaTime <= 0f) return;
 
             ElapsedSeconds = SpawnMath.NextElapsedSeconds(ElapsedSeconds, deltaTime, RunElapsedSeconds());
             var center = player.Character.transform.position;
             RecycleFarEnemies(center);
 
-            spawnBudget += Mathf.Max(0f, config.spawnsPerSecond.Evaluate(ElapsedSeconds)) * deltaTime;
-            var maxAlive = Mathf.FloorToInt(config.maxAlive.Evaluate(ElapsedSeconds));
+            var phase = CurrentPhase;
+            if (phase == null) return;
+
+            spawnBudget += Mathf.Max(0f, phase.spawnsPerSecond) * deltaTime;
+            var maxAlive = CurrentMaxAlive;
             while (spawnBudget >= 1f)
             {
                 spawnBudget -= 1f;
@@ -46,7 +96,7 @@ namespace FreedomJam.Game.Enemy
                     spawnBudget = 0f;
                     break;
                 }
-                if (!Spawn(center)) break;
+                if (!Spawn(center, phase)) break;
             }
         }
 
@@ -65,30 +115,57 @@ namespace FreedomJam.Game.Enemy
             alive.Clear();
         }
 
-        bool Spawn(Vector3 center)
+        // Labels each phase "0:30 → 1:00" in the Inspector and flags shares that don't add up to 100 %.
+        void OnValidate()
         {
+            for (var i = 0; i < phases.Count; i++)
+            {
+                var phase = phases[i];
+                if (phase == null) continue;
+
+                var end = SpawnMath.PhaseEnd(phases, i);
+                var label = $"{FormatTime(phase.startTime)} → {(float.IsPositiveInfinity(end) ? "end" : FormatTime(end))}";
+
+                var total = 0f;
+                foreach (var share in phase.creatures)
+                    if (share.creature != null) total += share.percent;
+                if (total <= 0f) label += "   ⚠ no creatures";
+                else if (Mathf.Abs(total - 100f) > 0.01f) label += $"   ⚠ shares add up to {total:0.#}% (scaled to 100%)";
+
+                phase.label = label;
+            }
+        }
+
+        static string FormatTime(float seconds)
+        {
+            var total = Mathf.Max(0, Mathf.RoundToInt(seconds));
+            return $"{total / 60}:{total % 60:00}";
+        }
+
+        bool Spawn(Vector3 center, SpawnPhase phase)
+        {
+            // Percent shares are relative weights, so they need not add up to exactly 100.
             weights.Clear();
-            foreach (var entry in config.creatures)
-                weights.Add(entry.creature != null && entry.creature.prefab != null && entry.weight != null
-                    ? entry.weight.Evaluate(ElapsedSeconds) : 0f);
+            foreach (var share in phase.creatures)
+                weights.Add(share.creature != null && share.creature.prefab != null ? share.percent : 0f);
 
             var index = SpawnMath.PickWeighted(weights, Random.value);
             if (index < 0) return false;
 
-            var creature = config.creatures[index].creature;
+            var creature = phase.creatures[index].creature;
             var enemy = GetPool(creature).Get();
             if (enemy == null) return false;
 
             enemy.transform.SetPositionAndRotation(
-                SpawnMath.RingPoint(center, config.spawnRingRadius, Random.value), Quaternion.identity);
-            enemy.Initialize(creature, release);
+                SpawnMath.RingPoint(center, spawnRingRadius, Random.value), Quaternion.identity);
+            enemy.Initialize(creature, release, phase.enemyStats);
             alive.Add(enemy);
             return true;
         }
 
         void RecycleFarEnemies(Vector3 center)
         {
-            var maxSqr = config.despawnDistance * config.despawnDistance;
+            var maxSqr = despawnDistance * despawnDistance;
             for (var i = alive.Count - 1; i >= 0; i--)
             {
                 var offset = alive[i].transform.position - center;

@@ -25,16 +25,30 @@ namespace FreedomJam.Game.Enemy
         float suctionUntil;
         float suctionSpeed;
 
+        EnemyStatMultipliers stats = EnemyStatMultipliers.One;
+
         public CreatureData Creature { get; private set; }
         protected override CharacterData Data => Creature;
 
+        /// <summary>Phase multipliers this enemy was spawned with (×1 when none).</summary>
+        public EnemyStatMultipliers Stats => stats;
+        public override float MaxHP => base.MaxHP * EnemyStatMultipliers.Safe(stats.hp);
+        public override float MoveSpeed => base.MoveSpeed * EnemyStatMultipliers.Safe(stats.speed);
+        public override float BodySize => base.BodySize * EnemyStatMultipliers.Safe(stats.size);
+        /// <summary>Damage per contact hit: the creature's contactDamage × the damage multiplier.</summary>
+        public float ContactDamage => Creature != null ? Creature.contactDamage * EnemyStatMultipliers.Safe(stats.damage) : 0f;
+
+        public void Initialize(CreatureData creature, Action<EnemyCharacter> releaseToPool) =>
+            Initialize(creature, releaseToPool, EnemyStatMultipliers.One);
+
         /// <summary>
-        /// Called by the spawner after taking the enemy from its pool. Sets the data, then resets,
+        /// Called by the spawner after taking the enemy from its pool. Sets the data and stat multipliers, then resets,
         /// because OnEnable may already have run with no data (REQ-ECHAR-6).
         /// </summary>
-        public void Initialize(CreatureData creature, Action<EnemyCharacter> releaseToPool)
+        public void Initialize(CreatureData creature, Action<EnemyCharacter> releaseToPool, EnemyStatMultipliers stats)
         {
             Creature = creature;
+            this.stats = stats;
             this.releaseToPool = releaseToPool;
             Active.Add(this);
             ResetCharacter();

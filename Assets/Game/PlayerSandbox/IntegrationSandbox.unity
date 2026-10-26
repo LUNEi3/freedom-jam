@@ -119,65 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &86829932
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 86829935}
-  - component: {fileID: 86829934}
-  - component: {fileID: 86829933}
-  m_Layer: 0
-  m_Name: Enemy Systems
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &86829933
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 86829932}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a91bf503a326841f882c730f1990ac80, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.Pickups.XpOrbSpawner
-  orbPrefab: {fileID: 716792687821622753, guid: 3e40865240ac141e8b06bb60527877d8, type: 3}
---- !u!114 &86829934
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 86829932}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca08e0e08722e42f5840ae02b6b5536a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.Enemy.EnemySpawner
-  config: {fileID: 11400000, guid: 92c8ec311d5b94d01baaf0c85a8c1b98, type: 2}
---- !u!4 &86829935
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 86829932}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &441433540
 GameObject:
   m_ObjectHideFlags: 0
@@ -504,7 +445,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: FreedomJam.Game.PlayerSandbox::FreedomJam.Game.PlayerSandbox.PlayerDebugOverlay
   player: {fileID: 646823190}
-  spawner: {fileID: 86829934}
+  spawner: {fileID: 1656791211}
 --- !u!4 &1364708827
 Transform:
   m_ObjectHideFlags: 0
@@ -647,6 +588,74 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1001 &1656791210
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2935499041709762464, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2935499041709762464, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2935499041709762464, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2935499041709762464, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2935499041709762464, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2935499041709762464, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2935499041709762464, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2935499041709762464, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2935499041709762464, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2935499041709762464, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7472690415245381359, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+      propertyPath: m_Name
+      value: EnemySpawner
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+--- !u!114 &1656791211 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1607740437788962552, guid: 0ba5adc2b7e164b76832f0ada0c2bfec, type: 3}
+  m_PrefabInstance: {fileID: 1656791210}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca08e0e08722e42f5840ae02b6b5536a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.Enemy.EnemySpawner
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -656,4 +665,4 @@ SceneRoots:
   - {fileID: 441433544}
   - {fileID: 646823189}
   - {fileID: 1364708827}
-  - {fileID: 86829935}
+  - {fileID: 1656791210}
