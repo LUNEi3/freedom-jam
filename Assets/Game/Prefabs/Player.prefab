@@ -194,6 +194,12 @@ GameObject:
   - component: {fileID: 362802220109368994}
   - component: {fileID: 6930301372335681860}
   - component: {fileID: 9099370247998457587}
+  - component: {fileID: 2832678707749965694}
+  - component: {fileID: 2700543420278762525}
+  - component: {fileID: 1782488250524156872}
+  - component: {fileID: 6579357245392865022}
+  - component: {fileID: 6594126807295778653}
+  - component: {fileID: 142210374779571676}
   m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
@@ -297,6 +303,7 @@ MonoBehaviour:
     m_Bits: 512
   gizmoColor: {r: 1, g: 0.5, b: 0, a: 0.9}
   biteColor: {r: 1, g: 0.1, b: 0.1, a: 1}
+  logBites: 1
 --- !u!114 &9099370247998457587
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -313,3 +320,104 @@ MonoBehaviour:
   levelConfig: {fileID: 11400000, guid: b90d53a20c91c594eae8c119ab4165f2, type: 2}
   mouth: {fileID: 6930301372335681860}
   sandboxRespawnDelay: 1
+  logEvents: 1
+--- !u!114 &2832678707749965694
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5090164919114779854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa64f96757aa8564ead6205204e288b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.CharacterHealthSource
+--- !u!114 &2700543420278762525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5090164919114779854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cd59d89956cbcb4b865971de6e98548, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.CharacterVisualFeedback
+  config: {fileID: 11400000, guid: 9562dfbdfeabffa46829b0106baa053b, type: 2}
+  useWhiteDamageFlash: 0
+--- !u!114 &1782488250524156872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5090164919114779854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8255b8a4b5a077541b40554057f7ab8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.DamageNumberSpawner
+  config: {fileID: 11400000, guid: 9562dfbdfeabffa46829b0106baa053b, type: 2}
+  numberPrefab: {fileID: 3120189223475948238, guid: 78a68e6d6b25cf644a6ee3659186c004, type: 3}
+--- !u!114 &6579357245392865022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5090164919114779854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c29ca5539401284db6faca28fc472a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.PlayerHealthBar
+  config: {fileID: 11400000, guid: 9562dfbdfeabffa46829b0106baa053b, type: 2}
+  viewPrefab: {fileID: 4966153711479121860, guid: eb7dd4f501f714e4db8d24d2dcb18674, type: 3}
+--- !u!114 &6594126807295778653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5090164919114779854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28d96ea41d570ea4da194e5d2c7a13fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.Player.PlayerAbilityController
+  dashLevels:
+  - distance: 3
+    speed: 12
+    cooldown: 10
+  - distance: 4
+    speed: 12
+    cooldown: 9
+  suckLevels:
+  - range: 7
+    coneAngle: 100
+    pullDuration: 0.6
+    pullSpeed: 14
+    cooldown: 10
+  - range: 8.5
+    coneAngle: 100
+    pullDuration: 0.6
+    pullSpeed: 14
+    cooldown: 9
+--- !u!114 &142210374779571676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5090164919114779854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc07f16aa431b5a438ace7e6dbe139c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.Player.PlayerLevelUpFlow
+  player: {fileID: 9099370247998457587}
+  panelPrefab: {fileID: 3477273295550684272, guid: 8a10ffdf26645304da3e0dcf1c8e7b82, type: 3}
+  choiceSources:
+  - {fileID: 6594126807295778653}

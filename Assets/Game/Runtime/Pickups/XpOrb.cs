@@ -14,6 +14,7 @@ namespace FreedomJam.Game.Pickups
 
         Action<XpOrb> releaseToPool;
         bool pulled;
+        float suctionSpeed;
 
         public int Xp { get; private set; }
 
@@ -23,6 +24,15 @@ namespace FreedomJam.Game.Pickups
             Xp = xp;
             this.releaseToPool = releaseToPool;
             pulled = false;
+            suctionSpeed = 0f;
+        }
+
+        /// <summary>Starts or speeds up this orb's normal homing movement after it is sucked in.</summary>
+        public void StartSuction(float speed)
+        {
+            if (Xp <= 0 || !(speed > 0f)) return;
+            suctionSpeed = Mathf.Max(suctionSpeed, speed);
+            pulled = true;
         }
 
         void Update()
@@ -41,7 +51,11 @@ namespace FreedomJam.Game.Pickups
             }
 
             if (distance <= player.PickupRadius) pulled = true;
-            if (pulled) transform.position += offset / distance * Mathf.Min(distance, pullSpeed * deltaTime);
+            if (pulled)
+            {
+                var speed = suctionSpeed > 0f ? suctionSpeed : pullSpeed;
+                transform.position += offset / distance * Mathf.Min(distance, speed * deltaTime);
+            }
         }
 
         void Collect()
