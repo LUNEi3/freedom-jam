@@ -38,7 +38,7 @@ CharacterData (abstract ScriptableObject)                    SHARED CONTRACT
 |---|---|---|
 | **Shared contract** | Created once in Step 0 (§5), then changed only when **both** devs agree | `Runtime/Common/*`, `Runtime/Data/CharacterData.cs`, `Runtime/Data/CreatureData.cs`, `Runtime/Data/StatType.cs`, `Runtime/FreedomJam.Game.asmdef`, layers in `ProjectSettings/TagManager.asset` |
 | **Track A — Player** (teammate) | Player dev | `Runtime/Player/*`, `Runtime/Camera/*`, `Runtime/UI/*`, `Runtime/Data/PlayerConfig.cs`, `Runtime/Data/LevelConfig.cs`, `Prefabs/Player.prefab`, `Data/Player/*` assets, `Tests/EditMode/Player*` |
-| **Track B — Enemy & World** (LUNEi3) | Enemy dev | `Runtime/Enemy/*`, `Runtime/Pickups/*`, `Runtime/Data/SpawnConfig.cs`, `Prefabs/Enemy_*.prefab`, `Prefabs/XpOrb.prefab`, `Data/Creatures/*` and `Data/Spawn/*` assets, `Tests/EditMode/Enemy*` |
+| **Track B — Enemy & World** (LUNEi3) | Enemy dev | `Runtime/Enemy/*`, `Runtime/Pickups/*`, `Runtime/Data/SpawnConfig.cs`, `Prefabs/Enemy_*.prefab`, `Prefabs/XpOrb.prefab`, `Data/Creatures/*` and `Data/Spawn/*` assets, `Art/Materials/*` (placeholder), `Sandbox/*` (test-only scene and stand-in player, not used by the game), `Tests/EditMode/Enemy*` |
 | **`Game.unity` scene** | One person at a time — say so in chat before opening it | `Assets/GameJamFoundation/Scenes/Game.unity` |
 
 All paths above are under `Assets/Game/` unless written in full.
@@ -256,8 +256,9 @@ public sealed class CreatureData : CharacterData
 | `Enemy` | Enemy hurtbox / contact hitbox | trigger, radius × `BodySize` |
 | `Pickup` | XP orbs | trigger |
 
-- Player and enemies each have a **kinematic `Rigidbody`** and move with `Rigidbody.MovePosition` / `MoveRotation`.
+- Player and enemies each have a **kinematic `Rigidbody`** (needed for trigger events) and move by setting `transform` position/rotation inside `Tick`. `Tick` runs from `Update`, where `Rigidbody.MovePosition` would only apply once per physics step and lose movement at high frame rates.
 - In the collision matrix, turn **off** `Enemy`↔`Enemy` and `Pickup`↔`Enemy`. Keep `Player`↔`Enemy` and `Player`↔`Pickup`.
+- **Body radius rule:** every Character's body is a circle on the XZ plane with radius `BodySize × 0.5`. Prefabs are built so that a `BodySize` of 1 is a 1-unit-wide body (Unity's default sphere / capsule). Enemies use this to stop at the player's surface and to detect contact (REQ-ECHAR-1/3), so the **player prefab must follow it too**.
 - The player's mouth finds enemies with `Physics.OverlapSphere(position, mouthRange, enemyMask)` and then the cone test. It does not need its own collider.
 
 ---
@@ -298,12 +299,12 @@ public abstract class EnemyCharacter : Character
 }
 ```
 
-- **REQ-ECHAR-1** `Move` (virtual) chases `GameplayContext.Player.Character` at `MoveSpeed` on the XZ plane, facing its movement. If there is no living player, it stands still.
+- **REQ-ECHAR-1** `Move` (virtual) chases `GameplayContext.Player.Character` at a constant `MoveSpeed` on the XZ plane (no acceleration or momentum), facing the player. It stops when the bodies touch (`ContactDistance` = both radii, §3.6) and is never inside the player: if it ends up closer, it moves straight back out to the surface that frame. If there is no living player, it stands still.
 - **REQ-ECHAR-2** `OnDied` resolves eat-vs-kill **at that moment**, whatever dealt the killing blow (MVP §4.3):
   - `GameplayContext.Player?.IsInMouth(transform.position) == true` → `GameplayEvents.RaiseCreatureEaten(Creature)`.
   - otherwise → `GameplayEvents.RaiseCreatureKilled(Creature, transform.position)`.
   - Both cases: `GameFoundationBootstrap.Instance.Flow.AddScore(Creature.scoreValue)` (MVP REQ-EAT-4), then release to the pool. Never `Destroy`.
-- **REQ-ECHAR-3** `EnemyContactDamage` (separate component) damages the player's `IDamageable` on trigger stay with `new DamageInfo(Creature.contactDamage, DamageType.Normal, enemy)`, at most once per `contactDamageInterval` per enemy. Its timer resets on `OnReset`.
+- **REQ-ECHAR-3** `EnemyContactDamage` (separate component) damages the player with `new DamageInfo(Creature.contactDamage, DamageType.Normal, enemy)` while `EnemyCharacter.IsTouchingPlayer()` is true (body distance, not trigger events — an enemy resting exactly at the surface may not register a physics overlap), at most once per `contactDamageInterval` per enemy. Its timer resets when the enemy is re-enabled from the pool.
 - **REQ-ECHAR-4** `BasicEnemy : EnemyCharacter` uses the default chase. **Ember and Zipper are both `BasicEnemy` prefabs with different `CreatureData` assets.**
 - **REQ-ECHAR-5** Make a new subclass only for new **behaviour**: override `Move` (e.g. zig-zag, dash), `OnDamaged` (e.g. flee when hurt) or `OnDied` (call `base.OnDied` to keep the eat/kill rule). A different number is a data change, not a subclass.
 - **REQ-ECHAR-6** `EnemySpawner` uses `UnityEngine.Pool.ObjectPool<EnemyCharacter>` per `CreatureData` and reads rates from `SpawnConfig` (MVP §4.6). `Initialize` must set `Creature` **and then call `ResetCharacter()`** — never rely on `OnEnable` alone, since it may run before the data is set (REQ-CHAR-4b).
