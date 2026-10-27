@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06ed9dbef59124097ba02117943856af, type: 3}
   m_Name: Ember
   m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.CreatureData
-  maxHP: 2
+  maxHP: 1.5
   moveSpeed: 2.5
   bodySize: 1
   displayName: Ember
   prefab: {fileID: 6687152740526748734, guid: e44bdef51984940c7a77f4fbd4a84ead, type: 3}
-  contactDamage: 1
+  contactDamage: 1.2
   contactDamageInterval: 1
   xpValue: 2
   scoreValue: 10

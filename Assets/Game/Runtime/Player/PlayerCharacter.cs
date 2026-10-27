@@ -277,7 +277,11 @@ namespace FreedomJam.Game.Player
             ApplyBodyScale();
         }
 
-        void OnLevelUp(int _) => Heal(MaxHP);
+        /// <summary>Level-up heals a share of max HP (PlayerConfig.levelUpHealPercent, 20 % by default).</summary>
+        void OnLevelUp(int _)
+        {
+            if (config != null) Heal(MaxHP * config.LevelUpHealPercent);
+        }
 
         float GetStat(StatType stat)
         {

@@ -43,6 +43,8 @@ namespace FreedomJam.Game
         [SerializeField] float pickupRadius = 2f;
         [Tooltip("Seconds of invulnerability after being hit. 0 = none.")]
         [SerializeField] float hitInvulnerability = 0.5f;
+        [Tooltip("Share of max HP restored on each level-up. 0.2 = 20 %, 1 = full heal, 0 = none.")]
+        [SerializeField, Range(0f, 1f)] float levelUpHealPercent = 0.2f;
 
         [Header("Size scaling")]
         [Tooltip("Stats that grow with the player's size (size from eating). Formula: 1 + (size ÷ starting size − 1) × strength. Mouth reach always follows size.")]
@@ -52,6 +54,7 @@ namespace FreedomJam.Game
         public float MouthAngle => mouthAngle;
         public float MouthTargetRadius => mouthTargetRadius;
         public float HitInvulnerability => hitInvulnerability;
+        public float LevelUpHealPercent => Mathf.Clamp01(levelUpHealPercent);
 
         /// <summary>Base value of a stat, before multipliers.</summary>
         public float GetBaseValue(StatType stat) => stat switch
