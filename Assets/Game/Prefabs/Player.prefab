@@ -421,21 +421,21 @@ MonoBehaviour:
   dashLevels:
   - distance: 3
     speed: 12
-    cooldown: 10
+    cooldown: 6
   - distance: 4
     speed: 12
-    cooldown: 9
+    cooldown: 4
   suckLevels:
   - range: 7
     coneAngle: 100
     pullDuration: 0.6
     pullSpeed: 14
-    cooldown: 10
+    cooldown: 5
   - range: 8.5
     coneAngle: 100
-    pullDuration: 0.6
+    pullDuration: 1
     pullSpeed: 14
-    cooldown: 9
+    cooldown: 7
   dashVfx: {fileID: 6889691537336371183}
   suckVfx: {fileID: 4141988089673157071}
   dashDistanceSizeStrength: 1
@@ -546,13 +546,13 @@ MonoBehaviour:
   levels:
   - radius: 4
     damage: 25
-    cooldown: 12
+    cooldown: 15
     slowMotionScale: 0.1
     slowMotionDuration: 0.7
     hitDelayPerMeter: 0.08
   - radius: 5
     damage: 35
-    cooldown: 10
+    cooldown: 15
     slowMotionScale: 0.1
     slowMotionDuration: 0.7
     hitDelayPerMeter: 0.08
