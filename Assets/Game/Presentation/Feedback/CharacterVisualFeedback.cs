@@ -22,19 +22,23 @@ namespace FreedomJam.Game.Presentation
         [SerializeField] CharacterFeedbackConfig config;
         [SerializeField] bool useWhiteDamageFlash;
         CharacterHealthSource source;
+        PlayerCharacter player;
         IInvincibilityState invincibility;
         readonly List<RendererState> states = new();
         float flashRemaining;
+        float activeFlashDuration;
+        Color activeFlashColor;
         bool materialsReady;
 
         float FlashDuration => config != null ? config.SafeFlashDuration : 0.12f;
         float BlinkFrequency => config != null ? config.SafeBlinkFrequency : 10f;
         float MinimumAlpha => config != null ? Mathf.Clamp01(config.minimumInvincibilityAlpha) : 0.25f;
-        Color FlashColor => useWhiteDamageFlash ? Color.white : config != null ? config.damageFlashColor : Color.red;
+        Color FlashColor => activeFlashColor;
 
         void Awake()
         {
             source = GetComponent<CharacterHealthSource>();
+            player = GetComponent<PlayerCharacter>();
             FindInvincibilityState();
         }
 
@@ -48,6 +52,7 @@ namespace FreedomJam.Game.Presentation
                 source.LifeStarted += OnLifeStarted;
                 source.LifeEnded += OnLifeEnded;
             }
+            if (player != null) player.UpgradeApplied += OnUpgradeApplied;
             flashRemaining = 0f;
             EnsureMaterials();
             AssignRuntimeMaterials();
@@ -62,6 +67,7 @@ namespace FreedomJam.Game.Presentation
                 source.LifeStarted -= OnLifeStarted;
                 source.LifeEnded -= OnLifeEnded;
             }
+            if (player != null) player.UpgradeApplied -= OnUpgradeApplied;
             RestoreOriginals();
         }
 
@@ -74,15 +80,56 @@ namespace FreedomJam.Game.Presentation
         void Update()
         {
             if (!materialsReady) EnsureMaterials();
-            if (FlashDuration > 0f) flashRemaining = Mathf.Max(0f, flashRemaining - Time.deltaTime);
+            flashRemaining = Mathf.Max(0f, flashRemaining - Time.unscaledDeltaTime);
             var blink = invincibility != null && invincibility.IsInvincible && BlinkFrequency > 0f;
             SetTransparent(blink);
             var alpha = blink && Mathf.Sin(Time.time * BlinkFrequency * Mathf.PI * 2f) < 0f ? MinimumAlpha : 1f;
-            var flash = FlashDuration > 0f ? Mathf.Clamp01(flashRemaining / FlashDuration) : 0f;
+            var flash = activeFlashDuration > 0f ? Mathf.Clamp01(flashRemaining / activeFlashDuration) : 0f;
             Apply(alpha, flash);
         }
 
-        void OnDamaged(ICharacterHealthSource _, FreedomJam.Game.DamageInfo __) => flashRemaining = FlashDuration;
+        void OnDamaged(ICharacterHealthSource _, FreedomJam.Game.DamageInfo __)
+        {
+            activeFlashColor = useWhiteDamageFlash ? Color.white : config != null ? config.damageFlashColor : Color.red;
+            flashRemaining = FlashDuration;
+            activeFlashDuration = FlashDuration;
+            if (useWhiteDamageFlash) Apply(1f, 1f);
+        }
+
+        public void PlayFlash(Color color, float duration)
+        {
+            activeFlashColor = color;
+            flashRemaining = Mathf.Max(0f, duration);
+            activeFlashDuration = Mathf.Max(0f, duration);
+        }
+
+        void OnUpgradeApplied()
+        {
+            var green = config != null ? config.upgradeFlashColor : new Color(0.2f, 1f, 0.3f, 1f);
+            PlayFlash(green, config != null ? config.upgradeFlashDuration : 0.3f);
+
+            var particleObject = new GameObject("Upgrade Particles");
+            particleObject.transform.position = transform.position + Vector3.up * 0.5f;
+            var particles = particleObject.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.duration = 0.5f;
+            main.loop = false;
+            main.useUnscaledTime = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.65f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(1.5f, 3f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.18f);
+            main.startColor = green;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.stopAction = ParticleSystemStopAction.Destroy;
+            var emission = particles.emission;
+            emission.rateOverTime = 0f;
+            var count = config != null ? Mathf.Clamp(config.upgradeParticleCount, 0, short.MaxValue) : 18;
+            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)count) });
+            var shape = particles.shape;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.2f;
+            particles.Play();
+        }
 
         void FindInvincibilityState()
         {
@@ -97,13 +144,19 @@ namespace FreedomJam.Game.Presentation
         void OnLifeStarted(ICharacterHealthSource _)
         {
             flashRemaining = 0f;
+            activeFlashDuration = 0f;
+            activeFlashColor = Color.clear;
             RestoreEnabledStates();
             Apply(1f, 0f);
         }
 
         void OnLifeEnded(ICharacterHealthSource _)
         {
+            // Keep a dying enemy's lethal-hit flash visible during its short death linger.
+            if (useWhiteDamageFlash) return;
             flashRemaining = 0f;
+            activeFlashDuration = 0f;
+            activeFlashColor = Color.clear;
             Apply(1f, 0f);
         }
 

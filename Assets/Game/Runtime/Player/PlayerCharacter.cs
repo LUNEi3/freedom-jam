@@ -1,4 +1,6 @@
+using System;
 using FreedomJam.Foundation;
+using FreedomJam.Game.CameraRig;
 using UnityEngine;
 
 namespace FreedomJam.Game.Player
@@ -11,9 +13,13 @@ namespace FreedomJam.Game.Player
     [RequireComponent(typeof(Rigidbody))]
     public sealed class PlayerCharacter : Character, IPlayer, IInvincibilityState
     {
+        const float MovementCollisionSkin = 0.04f;
+        const int MaxMovementSlideIterations = 3;
+
         [SerializeField] PlayerConfig config;
         [SerializeField] LevelConfig levelConfig;
         [SerializeField] PlayerMouth mouth;
+        [SerializeField] CharacterController controller;
         [Tooltip("Eat N of a creature → a stat steps up. Creatures not listed give XP only. Empty = eating gives XP only.")]
         [SerializeField] EatStackConfig eatStackConfig;
         [Tooltip("Without a foundation bootstrap (test scene), respawn after this many seconds instead of ending the run.")]
@@ -22,6 +28,7 @@ namespace FreedomJam.Game.Player
         [SerializeField] bool logEvents = true;
 
         ISteeringInput steering;
+        SphereCollider movementCollider;
         Vector3 prefabScale = Vector3.one;
         float invulnerableUntil;
         float lastMaxHP;
@@ -33,6 +40,9 @@ namespace FreedomJam.Game.Player
         public PlayerExperience Experience { get; private set; }
         /// <summary>Eat counts per creature and their tiers. Null without an EatStackConfig.</summary>
         public EatStack EatStack { get; private set; }
+        public event Action UpgradeApplied;
+
+        public void NotifyUpgradeApplied() => UpgradeApplied?.Invoke();
 
         protected override CharacterData Data => config;
 
@@ -56,14 +66,17 @@ namespace FreedomJam.Game.Player
 
         void Awake()
         {
-            // Kinematic body only for trigger events; movement sets the transform (architecture §3.6).
+            // Keep the kinematic body for trigger events; movement uses a sphere sweep so the trigger
+            // collider can still detect gameplay overlaps without passing through solid map geometry.
             var body = GetComponent<Rigidbody>();
             body.isKinematic = true;
             body.interpolation = RigidbodyInterpolation.None;
             prefabScale = transform.localScale;
             steering = GetComponent<ISteeringInput>();
+            movementCollider = GetComponent<SphereCollider>();
 
             if (config == null) Debug.LogError("PlayerCharacter needs a PlayerConfig. The player will not move or take damage.", this);
+            if (controller == null) Debug.LogError("PlayerCharacter needs a CharacterController. The player will not move.", this);
             if (levelConfig == null) Debug.LogError("PlayerCharacter needs a LevelConfig. Stats and XP are disabled.", this);
             if (steering == null) Debug.LogWarning("PlayerCharacter has no ISteeringInput component, so it cannot turn.", this);
             if (mouth == null) Debug.LogWarning("PlayerCharacter has no PlayerMouth assigned, so it cannot eat.", this);
@@ -136,9 +149,41 @@ namespace FreedomJam.Game.Player
                 dashDistanceRemaining -= dashStep;
             }
 
-            transform.SetPositionAndRotation(
-                transform.position + displacement,
-                rotation);
+            transform.rotation = rotation;
+            controller.Move(displacement);
+        }
+
+        Vector3 ResolveMovement(Vector3 displacement)
+        {
+            if (movementCollider == null || displacement.sqrMagnitude <= 0.000001f)
+                return displacement;
+
+            var scale = transform.lossyScale;
+            var maxScale = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
+            var worldRadius = movementCollider.radius * maxScale;
+            var castRadius = Mathf.Max(0.01f, worldRadius - Mathf.Min(MovementCollisionSkin, worldRadius * 0.1f));
+            var castCenter = movementCollider.transform.TransformPoint(movementCollider.center);
+            var blockingLayers = Physics.DefaultRaycastLayers & ~(1 << gameObject.layer);
+            var remaining = displacement;
+            var resolved = Vector3.zero;
+
+            for (var i = 0; i < MaxMovementSlideIterations && remaining.sqrMagnitude > 0.000001f; i++)
+            {
+                var distance = remaining.magnitude;
+                var direction = remaining / distance;
+                if (!Physics.SphereCast(castCenter + resolved, castRadius, direction, out var hit,
+                        distance, blockingLayers, QueryTriggerInteraction.Ignore))
+                {
+                    resolved += remaining;
+                    break;
+                }
+
+                var travel = Mathf.Clamp(hit.distance, 0f, distance);
+                resolved += direction * travel;
+                remaining = Vector3.ProjectOnPlane(remaining - direction * travel, hit.normal);
+            }
+
+            return resolved;
         }
 
         /// <summary>Starts a forward dash that travels over time at the configured speed.</summary>
@@ -165,6 +210,12 @@ namespace FreedomJam.Game.Player
         protected override void OnDamaged(DamageInfo info)
         {
             if (config != null) invulnerableUntil = Time.time + config.HitInvulnerability;
+            var camera = Camera.main;
+            if (camera != null)
+            {
+                var shake = camera.GetComponent<CameraShake>() ?? camera.gameObject.AddComponent<CameraShake>();
+                shake.Shake();
+            }
             if (logEvents)
             {
                 var source = info.Source != null ? info.Source.name : "unknown";

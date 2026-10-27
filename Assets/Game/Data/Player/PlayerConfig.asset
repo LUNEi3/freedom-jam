@@ -18,8 +18,8 @@ MonoBehaviour:
   steerSpeed: 180
   baseDamage: 2
   fireDamage: 0
-  mouthRange: 1.5
-  mouthAngle: 90
+  mouthRange: 1.2
+  mouthAngle: 70
   mouthTickInterval: 0.5
   mouthTargetRadius: 0.5
   pickupRadius: 0.75

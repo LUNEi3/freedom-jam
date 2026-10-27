@@ -1,6 +1,7 @@
 using System;
 using FreedomJam.Game.CameraRig;
 using FreedomJam.Game.Presentation;
+using FreedomJam.Game.Enemy;
 using FreedomJam.Game.Player;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -244,6 +245,7 @@ namespace FreedomJam.Game.PlayerSandbox.Editor
             camera.fieldOfView = 35f;
 
             var follow = camera.gameObject.AddComponent<FixedAngleFollowCamera>();
+            if (camera.GetComponent<CameraShake>() == null) camera.gameObject.AddComponent<CameraShake>();
             SetReference(follow, "target", target);
 
             // Start where the follow script would put it, so there's no swoop on Play.
@@ -294,9 +296,17 @@ namespace FreedomJam.Game.PlayerSandbox.Editor
             SetBool(visuals, "useWhiteDamageFlash", !player);
             SetReference(numbers, "config", config);
             SetReference(numbers, "numberPrefab", damageNumberPrefab);
+            SetBool(numbers, "isPlayer", player);
+            if (!player)
+            {
+                var enemy = root.GetComponent<EnemyCharacter>();
+                if (enemy != null) SetReference(enemy, "deathVfxPrefab", config != null ? config.enemyDeathVfxPrefab : null);
+            }
             if (player)
             {
                 if (root.GetComponent<PlayerAbilityController>() == null) root.AddComponent<PlayerAbilityController>();
+                var hud = root.GetComponent<PlayerHudOverlay>() ?? root.AddComponent<PlayerHudOverlay>();
+                SetReference(hud, "config", config);
                 var bar = root.GetComponent<PlayerHealthBar>() ?? root.AddComponent<PlayerHealthBar>();
                 SetReference(bar, "config", config);
                 SetReference(bar, "viewPrefab", playerHealthBarPrefab);

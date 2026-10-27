@@ -36,12 +36,12 @@ namespace FreedomJam.Game.Presentation
             labelRect.offsetMax = Vector2.zero;
         }
 
-        public void Show(Vector3 position, string value, float fontSize, CharacterFeedbackConfig config, Action<DamageNumber> onFinished)
+        public void Show(Vector3 position, string value, float fontSize, CharacterFeedbackConfig config, Color numberColor, Action<DamageNumber> onFinished)
         {
             worldCamera = Camera.main;
             lifetime = config != null ? config.SafeNumberLifetime : 0.8f;
             rise = config != null ? config.damageNumberRise : 0.8f;
-            color = config != null ? config.damageNumberColor : Color.white;
+            color = numberColor;
             finished = onFinished;
             age = 0f;
             startPosition = position;
@@ -51,10 +51,12 @@ namespace FreedomJam.Game.Presentation
             transform.localScale = Vector3.one * 0.01f;
             label.text = value;
             label.fontSize = Mathf.RoundToInt(fontSize);
+            label.fontStyle = FontStyle.Bold;
             label.color = color;
             var outline = label.GetComponent<Outline>() ?? label.gameObject.AddComponent<Outline>();
             outline.effectColor = new Color(0f, 0f, 0f, 0.8f);
-            outline.effectDistance = new Vector2(1.25f, -1.25f);
+            var thickness = config != null ? config.SafeDamageNumberOutlineThickness : 3f;
+            outline.effectDistance = new Vector2(thickness, -thickness);
             gameObject.SetActive(true);
         }
 
