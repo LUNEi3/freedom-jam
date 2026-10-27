@@ -17,12 +17,15 @@ namespace FreedomJam.Foundation
         public TimerMode TimerMode { get; }
         public float DisplaySeconds => TimerMode == TimerMode.Countdown ? RemainingSeconds : ElapsedSeconds;
 
+        readonly float countdownTotal;
+
         public GameRunData(GameConfig config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             Score = config.initialScore;
             TimerMode = config.timerMode;
             RemainingSeconds = IsFinite(config.countdownSeconds) ? Math.Max(0, config.countdownSeconds) : 0;
+            countdownTotal = RemainingSeconds;
         }
 
         public void AddScore(int delta)
@@ -46,6 +49,8 @@ namespace FreedomJam.Foundation
             ElapsedSeconds += consumed;
             RemainingSeconds = Math.Max(0, RemainingSeconds - consumed);
             if (RemainingSeconds > 0) return false;
+            // Summed frame times land a hair under the total; a timed-out run lasted exactly the countdown.
+            ElapsedSeconds = countdownTotal;
             Complete(RunOutcome.TimeUp);
             return true;
         }

@@ -92,6 +92,62 @@ namespace FreedomJam.Foundation.Tests
         }
 
         [Test]
+        public void Popup_FinishRun_StaysInGame_ShowsAfterDelay_AndFreezes()
+        {
+            config.resultDisplay = ResultDisplay.Popup;
+            config.resultPopupDelay = 1f;
+            var shown = 0;
+            flow.ResultShown += () => shown++;
+            flow.StartRun();
+
+            flow.FinishRun();
+            Assert.That(flow.State, Is.EqualTo(GameState.Result));
+            Assert.That(flow.IsResultShown, Is.False);
+            Assert.That(timeScale, Is.EqualTo(1f));
+
+            flow.Tick(0.6f);
+            Assert.That(flow.IsResultShown, Is.False);
+            flow.Tick(0.6f);
+            flow.Tick(0.6f);
+            Assert.That(flow.IsResultShown, Is.True);
+            Assert.That(shown, Is.EqualTo(1));
+            Assert.That(timeScale, Is.EqualTo(0f));
+            Assert.That(loadedScenes, Is.EqualTo(new[] { "Game" }));
+        }
+
+        [Test]
+        public void Popup_ZeroDelay_ShowsImmediately_AndPlayAgainUnfreezes()
+        {
+            config.resultDisplay = ResultDisplay.Popup;
+            config.resultPopupDelay = 0f;
+            flow.StartRun();
+
+            flow.FinishRun(RunOutcome.Won);
+            Assert.That(flow.IsResultShown, Is.True);
+            Assert.That(timeScale, Is.EqualTo(0f));
+
+            flow.StartRun();
+            Assert.That(flow.State, Is.EqualTo(GameState.Playing));
+            Assert.That(flow.IsResultShown, Is.False);
+            Assert.That(timeScale, Is.EqualTo(1f));
+            Assert.That(loadedScenes, Is.EqualTo(new[] { "Game", "Game" }));
+        }
+
+        [Test]
+        public void Popup_MainMenu_Unfreezes()
+        {
+            config.resultDisplay = ResultDisplay.Popup;
+            config.resultPopupDelay = 0f;
+            flow.StartRun();
+            flow.FinishRun();
+
+            flow.ReturnToMainMenu();
+            Assert.That(flow.IsResultShown, Is.False);
+            Assert.That(timeScale, Is.EqualTo(1f));
+            Assert.That(loadedScenes[loadedScenes.Count - 1], Is.EqualTo("MainMenu"));
+        }
+
+        [Test]
         public void FinishRun_Won_BeforeCountdownEnds_IsWon()
         {
             config.timerMode = TimerMode.Countdown;

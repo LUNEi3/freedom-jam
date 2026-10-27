@@ -27,6 +27,10 @@ namespace FreedomJam.Foundation
         Action openSettings;
         bool initialized;
         bool listenersBound;
+        CanvasGroup popupGroup;
+
+        /// <summary>Popup mode (GameConfig.resultDisplay): this lives in the Game scene and stays hidden until the run's result is shown.</summary>
+        bool IsPopup => flow != null && flow.Config != null && flow.Config.resultDisplay == ResultDisplay.Popup;
 
         public void Initialize(GameFlowController flow, SettingsStore store, Action openSettings)
         {
@@ -34,6 +38,7 @@ namespace FreedomJam.Foundation
             {
                 this.flow.RunUpdated -= OnRunUpdated;
                 this.flow.StateChanged -= OnStateChanged;
+                this.flow.ResultShown -= OnResultShown;
             }
             this.flow = flow;
             this.store = store;
@@ -43,10 +48,21 @@ namespace FreedomJam.Foundation
             {
                 this.flow.RunUpdated += OnRunUpdated;
                 this.flow.StateChanged += OnStateChanged;
+                this.flow.ResultShown += OnResultShown;
             }
             BindListeners();
             Render();
-            SelectDefault();
+            UpdatePopupVisibility();
+            if (!IsPopup || IsPopupVisible) SelectDefault();
+        }
+
+        void Awake()
+        {
+            // Hide before the first frame when this is the Game scene's result popup.
+            var bootstrap = GameFoundationBootstrap.Instance;
+            if (bootstrap != null && bootstrap.Flow != null && bootstrap.Flow.Config != null &&
+                bootstrap.Flow.Config.resultDisplay == ResultDisplay.Popup)
+                SetPopupVisible(false);
         }
 
         void Start()
@@ -73,7 +89,38 @@ namespace FreedomJam.Foundation
 
         void OnRunUpdated(GameRunData _) => Render();
 
-        void OnStateChanged(GameState _) => Render();
+        void OnStateChanged(GameState _)
+        {
+            Render();
+            UpdatePopupVisibility();
+        }
+
+        void OnResultShown()
+        {
+            Render();
+            UpdatePopupVisibility();
+            SelectDefault();
+        }
+
+        bool IsPopupVisible => flow != null && flow.State == GameState.Result && flow.IsResultShown;
+
+        void UpdatePopupVisibility()
+        {
+            if (IsPopup) SetPopupVisible(IsPopupVisible);
+        }
+
+        void SetPopupVisible(bool visible)
+        {
+            if (popupGroup == null)
+            {
+                // Not ??: in the Editor a missing component comes back as a "fake null" object.
+                popupGroup = GetComponent<CanvasGroup>();
+                if (popupGroup == null) popupGroup = gameObject.AddComponent<CanvasGroup>();
+            }
+            popupGroup.alpha = visible ? 1f : 0f;
+            popupGroup.interactable = visible;
+            popupGroup.blocksRaycasts = visible;
+        }
 
         void Render()
         {
@@ -93,6 +140,7 @@ namespace FreedomJam.Foundation
             {
                 flow.RunUpdated += OnRunUpdated;
                 flow.StateChanged += OnStateChanged;
+                flow.ResultShown += OnResultShown;
             }
             BindListeners();
         }
@@ -104,6 +152,7 @@ namespace FreedomJam.Foundation
             {
                 flow.RunUpdated -= OnRunUpdated;
                 flow.StateChanged -= OnStateChanged;
+                flow.ResultShown -= OnResultShown;
             }
         }
 
@@ -112,6 +161,7 @@ namespace FreedomJam.Foundation
             if (flow == null) return;
             flow.RunUpdated -= OnRunUpdated;
             flow.StateChanged -= OnStateChanged;
+            flow.ResultShown -= OnResultShown;
         }
 
         void BindListeners()

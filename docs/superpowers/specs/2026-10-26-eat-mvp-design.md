@@ -75,7 +75,7 @@ Resolved **at the moment an enemy's HP reaches 0**, regardless of what dealt the
 ### 4.5 Player health
 - **REQ-HP-1** Player has `maxHP` and a hurtbox. Enemy hits reduce HP.
 - **REQ-HP-2** Short invulnerability window after being hit (`hitInvulnerability` seconds, tunable; may be 0).
-- **REQ-HP-3** At 0 HP the run ends: call `GameFoundationBootstrap.Instance.Flow.FinishRun()` (loads Result scene, saves best score).
+- **REQ-HP-3** At 0 HP the run ends: call `GameFoundationBootstrap.Instance.Flow.FinishRun()` (saves best score; with `GameConfig.resultDisplay = Popup` the game keeps running for `resultPopupDelay` (1 s), then freezes and shows the Game scene's result popup — no scene change).
 
 ### 4.6 Spawning & scaling difficulty
 - **REQ-SPAWN-1** Enemies spawn off-screen in a ring around the player, from an object pool.

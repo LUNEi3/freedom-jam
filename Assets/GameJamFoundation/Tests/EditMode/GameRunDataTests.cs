@@ -36,6 +36,14 @@ namespace FreedomJam.Foundation.Tests
             run.Advance(9); Assert.That(run.Outcome, Is.EqualTo(RunOutcome.None));
             run.Advance(1); Assert.That(run.Outcome, Is.EqualTo(RunOutcome.TimeUp));
         }
+        [Test] public void Countdown_Expiry_ReportsExactCountdownAsElapsed()
+        {
+            config.timerMode = TimerMode.Countdown; config.countdownSeconds = 120;
+            var run = new GameRunData(config);
+            for (var i = 0; i < 7200; i++) run.Advance(1f / 60f);   // float drift leaves it a hair short
+            run.Advance(1f);
+            Assert.That(run.Outcome, Is.EqualTo(RunOutcome.TimeUp)); Assert.That(run.ElapsedSeconds, Is.EqualTo(120f));
+        }
         [Test] public void Complete_KeepsFirstOutcome()
         {
             config.timerMode = TimerMode.Countdown; config.countdownSeconds = 10;
