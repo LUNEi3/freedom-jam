@@ -18,7 +18,17 @@ MonoBehaviour:
   enemyBarSize: {x: 1.5, y: 0.14}
   playerBarPadding: {x: 18, y: 18}
   enemyBarHeadOffset: 0.18
+  experienceBarColor: {r: 0.18, g: 0.82, b: 0.96, a: 1}
+  experienceBarBackgroundColor: {r: 0.025, g: 0.035, b: 0.05, a: 0.95}
+  experienceBarHeight: 16
+  lowHealthVignetteStartRatio: 0.75
+  lowHealthVignetteMaximumAlpha: 0.95
+  lowHealthVignetteEdgeStart: 0.55
+  lowHealthVignetteFalloff: 1.5
   damageNumberColor: {r: 1, g: 1, b: 1, a: 1}
+  playerDamageNumberColor: {r: 1, g: 0, b: 0, a: 1}
+  damageNumberOutlineThickness: 3
+  enemyDeathVfxPrefab: {fileID: 3017611856642274195, guid: 162b9676145fc9648b6fdc7b91e7557e, type: 3}
   damageNumberLifetime: 0.8
   damageNumberRise: 0.8
   damageNumberMinSize: 28

@@ -11,6 +11,7 @@ namespace FreedomJam.Game.Presentation
     {
         [SerializeField] CharacterFeedbackConfig config;
         [SerializeField] DamageNumber numberPrefab;
+        [SerializeField] bool isPlayer;
         readonly Stack<DamageNumber> available = new();
         readonly HashSet<DamageNumber> active = new();
         Renderer[] bodyRenderers;
@@ -62,7 +63,9 @@ namespace FreedomJam.Game.Presentation
             var number = available.Count > 0 ? available.Pop() : CreateNumber();
             number.transform.SetParent(null, true);
             active.Add(number);
-            number.Show(position, $"{magnitude:0.#}", fontSize, config, Release);
+            var numberColor = isPlayer && config != null ? config.playerDamageNumberColor :
+                config != null ? config.damageNumberColor : Color.white;
+            number.Show(position, $"{magnitude:0.#}", fontSize, config, numberColor, Release);
         }
 
         DamageNumber CreateNumber()

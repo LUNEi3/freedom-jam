@@ -24,6 +24,13 @@ namespace FreedomJam.Game.Enemy
         Character suctionTarget;
         float suctionUntil;
         float suctionSpeed;
+        Collider[] hitboxes;
+        bool[] originalHitboxStates;
+        bool deathDespawnPending;
+
+        [SerializeField] GameObject deathVfxPrefab;
+        [Tooltip("Seconds the death hit flash remains visible before the enemy returns to its pool.")]
+        [SerializeField, Min(0f)] float deathDespawnDelay = 0.06f;
 
         EnemyStatMultipliers stats = EnemyStatMultipliers.One;
 
@@ -47,6 +54,10 @@ namespace FreedomJam.Game.Enemy
         /// </summary>
         public void Initialize(CreatureData creature, Action<EnemyCharacter> releaseToPool, EnemyStatMultipliers stats)
         {
+            CancelInvoke(nameof(FinishDeathDespawn));
+            deathDespawnPending = false;
+            CacheHitboxes();
+            RestoreHitboxes();
             Creature = creature;
             this.stats = stats;
             this.releaseToPool = releaseToPool;
@@ -56,15 +67,25 @@ namespace FreedomJam.Game.Enemy
 
         protected override void OnEnable()
         {
+            CacheHitboxes();
+            RestoreHitboxes();
+            deathDespawnPending = false;
             Active.Add(this);
             base.OnEnable();
         }
 
-        void OnDisable() => Active.Remove(this);
+        void OnDisable()
+        {
+            Active.Remove(this);
+            CancelInvoke(nameof(FinishDeathDespawn));
+            deathDespawnPending = false;
+            RestoreHitboxes();
+        }
 
         /// <summary>Return to the pool without eat/kill, e.g. when left too far behind the player.</summary>
         public void Despawn()
         {
+            if (deathDespawnPending) return;
             if (releaseToPool != null) releaseToPool(this);
             else gameObject.SetActive(false);
         }
@@ -180,6 +201,9 @@ namespace FreedomJam.Game.Enemy
 
         protected override void OnReset()
         {
+            CancelInvoke(nameof(FinishDeathDespawn));
+            deathDespawnPending = false;
+            RestoreHitboxes();
             suctionTarget = null;
             suctionUntil = 0f;
             suctionSpeed = 0f;
@@ -195,12 +219,65 @@ namespace FreedomJam.Game.Enemy
         protected override void OnDied(DamageInfo killingBlow)
         {
             var position = transform.position;
+            SpawnDeathVfx(position);
+            DisableHitboxes();
             var player = GameplayContext.Player;
             if (player != null && player.IsInMouth(position)) GameplayEvents.RaiseCreatureEaten(Creature);
             else GameplayEvents.RaiseCreatureKilled(Creature, position);
 
             AddScore(Creature.scoreValue);
+            if (Application.isPlaying && deathDespawnDelay > 0f)
+            {
+                deathDespawnPending = true;
+                Invoke(nameof(FinishDeathDespawn), deathDespawnDelay);
+            }
+            else
+            {
+                Despawn();
+            }
+        }
+
+        void FinishDeathDespawn()
+        {
+            deathDespawnPending = false;
             Despawn();
+        }
+
+        void CacheHitboxes()
+        {
+            if (hitboxes != null) return;
+            hitboxes = GetComponentsInChildren<Collider>(true);
+            originalHitboxStates = new bool[hitboxes.Length];
+            for (var i = 0; i < hitboxes.Length; i++)
+                originalHitboxStates[i] = hitboxes[i] != null && hitboxes[i].enabled;
+        }
+
+        void DisableHitboxes()
+        {
+            CacheHitboxes();
+            foreach (var hitbox in hitboxes)
+                if (hitbox != null) hitbox.enabled = false;
+        }
+
+        void RestoreHitboxes()
+        {
+            if (hitboxes == null || originalHitboxStates == null) return;
+            for (var i = 0; i < hitboxes.Length; i++)
+                if (hitboxes[i] != null) hitboxes[i].enabled = originalHitboxStates[i];
+        }
+
+        void SpawnDeathVfx(Vector3 position)
+        {
+            if (deathVfxPrefab == null) return;
+            var effect = Instantiate(deathVfxPrefab, position, Quaternion.identity);
+            var systems = effect.GetComponentsInChildren<ParticleSystem>(true);
+            var lifetime = 0f;
+            foreach (var system in systems)
+            {
+                var main = system.main;
+                lifetime = Mathf.Max(lifetime, main.duration + main.startLifetime.constantMax);
+            }
+            Destroy(effect, Mathf.Max(0.25f, lifetime));
         }
 
         static void AddScore(int score)

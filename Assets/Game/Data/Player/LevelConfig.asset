@@ -61,3 +61,10 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   statCaps: []
+  statGrowth:
+  - label: "MaxHP  +20% per level (level 10 \u2192 \xD72.8)"
+    stat: 0
+    perLevel: 0.2
+  - label: "BaseDamage  +10% per level (level 10 \u2192 \xD71.9)"
+    stat: 3
+    perLevel: 0.1
