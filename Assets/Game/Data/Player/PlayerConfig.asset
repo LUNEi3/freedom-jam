@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7903a7c6054b7ee4db679c37afcb2641, type: 3}
   m_Name: PlayerConfig
   m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.PlayerConfig
-  maxHP: 12
+  maxHP: 14
   moveSpeed: 3
   bodySize: 1
   steerSpeed: 180
