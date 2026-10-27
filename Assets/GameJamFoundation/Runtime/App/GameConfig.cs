@@ -17,6 +17,8 @@ namespace FreedomJam.Foundation
         public ResultDisplay resultDisplay = ResultDisplay.Scene;
         [Tooltip("Popup only: seconds the game keeps running after the run ends before the popup freezes it. 0 = immediately.")]
         [Min(0)] public float resultPopupDelay = 1f;
+        [Tooltip("Popup only: spawned when the result is shown if the Game scene has no ResultMenuController of its own.")]
+        public GameObject resultPopupPrefab;
         public TimerMode timerMode = TimerMode.CountUp;
         [Min(0)] public float countdownSeconds = 60;
         public int initialScore;

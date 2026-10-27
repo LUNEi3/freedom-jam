@@ -83,6 +83,10 @@ namespace FreedomJam.Game.Player
 
         void OnLeveledUp(int level)
         {
+            // XP can still be picked up in the moment after the run ends; don't open a choice over the result.
+            var flow = GameFoundationBootstrap.Instance != null ? GameFoundationBootstrap.Instance.Flow : null;
+            if (flow != null && flow.CurrentRun != null && flow.State == GameState.Result) return;
+
             pendingLevels.Enqueue(level);
             if (!ownsPause)
             {

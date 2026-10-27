@@ -21,6 +21,11 @@ namespace FreedomJam.Foundation
         public Button quitButton;
         public SettingsMenuController settingsMenu;
         public Selectable defaultSelection;
+        [Tooltip("Popup mode: this full-screen background is dimmed so the frozen game shows through.")]
+        public Graphic popupBackground;
+        [Range(0f, 1f)] public float popupBackgroundAlpha = 0.6f;
+        [Tooltip("Popup mode: canvas sorting order, above the HUD and other overlays.")]
+        public int popupSortingOrder = 100;
 
         GameFlowController flow;
         SettingsStore store;
@@ -52,6 +57,7 @@ namespace FreedomJam.Foundation
             }
             BindListeners();
             Render();
+            if (IsPopup) ApplyPopupLook();
             UpdatePopupVisibility();
             if (!IsPopup || IsPopupVisible) SelectDefault();
         }
@@ -107,6 +113,16 @@ namespace FreedomJam.Foundation
         void UpdatePopupVisibility()
         {
             if (IsPopup) SetPopupVisible(IsPopupVisible);
+        }
+
+        void ApplyPopupLook()
+        {
+            var canvas = GetComponent<Canvas>();
+            if (canvas != null) canvas.sortingOrder = Mathf.Max(canvas.sortingOrder, popupSortingOrder);
+            if (popupBackground == null) return;
+            var color = popupBackground.color;
+            color.a = popupBackgroundAlpha;
+            popupBackground.color = color;
         }
 
         void SetPopupVisible(bool visible)
