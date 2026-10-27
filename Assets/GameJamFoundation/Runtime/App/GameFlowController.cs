@@ -73,12 +73,15 @@ namespace FreedomJam.Foundation
             loadScene(config.mainMenuSceneName);
         }
 
-        public void FinishRun()
+        /// <summary>
+        /// Ends the run and loads the Result scene. Lost by default (e.g. the player died); pass Won when the game's
+        /// goal was reached. If the countdown just ran out, the run is already TimeUp and keeps that outcome.
+        /// </summary>
+        public void FinishRun(RunOutcome outcome = RunOutcome.Lost)
         {
             if (CurrentRun == null || (State != GameState.Playing && State != GameState.Paused)) return;
 
-            // Already Won if the countdown just ran out; otherwise the run ended early.
-            CurrentRun.Complete(RunOutcome.Lost);
+            CurrentRun.Complete(outcome);
             RestoreNormalTimeScale();
             store.TryRecordBestScore(config.bestScoreKey, CurrentRun.Score, config.bestScoreDefault, config.scoreDirection);
             SetState(GameState.Result);

@@ -2,8 +2,9 @@ using System;
 
 namespace FreedomJam.Foundation
 {
-    /// <summary>Won = the countdown ran out; Lost = the run was finished early (e.g. the player died).</summary>
-    public enum RunOutcome { None, Won, Lost }
+    /// <summary>Won = the game declared a win (e.g. the spaceship was reached); Lost = finished early (e.g. the player died);
+    /// TimeUp = the countdown ran out first.</summary>
+    public enum RunOutcome { None, Won, Lost, TimeUp }
 
     /// <summary>One run's values; never mutates the configuration asset.</summary>
     public sealed class GameRunData
@@ -29,7 +30,7 @@ namespace FreedomJam.Foundation
             if (!IsComplete) Score = (int)Math.Max(int.MinValue, Math.Min(int.MaxValue, (long)Score + delta));
         }
         public void SetScore(int score) { if (!IsComplete) Score = score; }
-        /// <summary>Only the first call counts, so a death after the countdown ran out keeps the win.</summary>
+        /// <summary>Only the first call counts, so whatever ended the run first decides the outcome.</summary>
         public void Complete(RunOutcome outcome = RunOutcome.None)
         {
             if (IsComplete) return;
@@ -45,7 +46,7 @@ namespace FreedomJam.Foundation
             ElapsedSeconds += consumed;
             RemainingSeconds = Math.Max(0, RemainingSeconds - consumed);
             if (RemainingSeconds > 0) return false;
-            Complete(RunOutcome.Won);
+            Complete(RunOutcome.TimeUp);
             return true;
         }
         static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);

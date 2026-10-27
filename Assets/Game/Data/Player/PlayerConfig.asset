@@ -22,7 +22,7 @@ MonoBehaviour:
   mouthAngle: 90
   mouthTickInterval: 0.5
   mouthTargetRadius: 0.5
-  pickupRadius: 2
+  pickupRadius: 0.75
   hitInvulnerability: 0.5
   sizeScaling:
   - label: "MaxHP  \xD71 strength (size \xD71.5 \u2192 \xD71.5)"

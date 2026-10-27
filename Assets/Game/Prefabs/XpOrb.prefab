@@ -104,4 +104,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.Pickups.XpOrb
   pullSpeed: 12
-  collectDistance: 0.6
+  collectDistance: 0.25

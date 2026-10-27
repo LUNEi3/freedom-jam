@@ -198,6 +198,7 @@ namespace FreedomJam.Game.Enemy
             var player = GameplayContext.Player;
             if (player != null && player.IsInMouth(position)) GameplayEvents.RaiseCreatureEaten(Creature);
             else GameplayEvents.RaiseCreatureKilled(Creature, position);
+            GameplayEvents.RaiseCreatureDied(Creature, position);
 
             AddScore(Creature.scoreValue);
             Despawn();

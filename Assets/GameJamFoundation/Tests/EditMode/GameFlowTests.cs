@@ -87,6 +87,21 @@ namespace FreedomJam.Foundation.Tests
 
             Assert.That(flow.State, Is.EqualTo(GameState.Result));
             Assert.That(flow.CurrentRun.RemainingSeconds, Is.EqualTo(0f));
+            Assert.That(flow.CurrentRun.Outcome, Is.EqualTo(RunOutcome.TimeUp));
+            Assert.That(loadedScenes.FindAll(scene => scene == "Result").Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void FinishRun_Won_BeforeCountdownEnds_IsWon()
+        {
+            config.timerMode = TimerMode.Countdown;
+            flow.StartRun();
+            flow.Tick(0.5f);
+
+            flow.FinishRun(RunOutcome.Won);
+            flow.Tick(1f);
+
+            Assert.That(flow.State, Is.EqualTo(GameState.Result));
             Assert.That(flow.CurrentRun.Outcome, Is.EqualTo(RunOutcome.Won));
             Assert.That(loadedScenes.FindAll(scene => scene == "Result").Count, Is.EqualTo(1));
         }

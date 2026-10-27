@@ -195,14 +195,16 @@ public static class GameplayEvents
 {
     public static event Action<CreatureData> CreatureEaten;              // died inside the mouth
     public static event Action<CreatureData, Vector3> CreatureKilled;    // died outside the mouth
+    public static event Action<CreatureData, Vector3> CreatureDied;      // died, eaten or killed (after the two above)
     public static event Action<int> XpCollected;                         // orb picked up
 
     public static void RaiseCreatureEaten(CreatureData creature) => CreatureEaten?.Invoke(creature);
     public static void RaiseCreatureKilled(CreatureData creature, Vector3 position) => CreatureKilled?.Invoke(creature, position);
+    public static void RaiseCreatureDied(CreatureData creature, Vector3 position) => CreatureDied?.Invoke(creature, position);
     public static void RaiseXpCollected(int amount) => XpCollected?.Invoke(amount);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetStatics() { CreatureEaten = null; CreatureKilled = null; XpCollected = null; }
+    static void ResetStatics() { CreatureEaten = null; CreatureKilled = null; CreatureDied = null; XpCollected = null; }
 }
 ```
 
@@ -211,8 +213,9 @@ public static class GameplayEvents
 | Event / call | Raised by | Listened to by |
 |---|---|---|
 | `GameplayContext.RegisterPlayer` / `UnregisterPlayer` | `PlayerCharacter` in `OnEnable` / `OnDisable` (Track A) | Enemies, spawner, orbs (Track B) |
-| `CreatureEaten` | `EnemyCharacter.OnDied` (Track B) | Player: count it in the eat stack (`EatStackConfig`, stepped stat tiers) + add `xpValue` (Track A) |
-| `CreatureKilled` | `EnemyCharacter.OnDied` (Track B) | `XpOrbSpawner` drops an orb (Track B); VFX/SFX |
+| `CreatureEaten` | `EnemyCharacter.OnDied` (Track B) | Player: count it in the eat stack (`EatStackConfig`, stepped stat tiers); **no XP here** (Track A) |
+| `CreatureKilled` | `EnemyCharacter.OnDied` (Track B) | VFX/SFX |
+| `CreatureDied` | `EnemyCharacter.OnDied`, eaten or killed (Track B) | `XpOrbSpawner` drops an XP orb (Track B) |
 | `XpCollected` | `XpOrb` on pickup (Track B) | Player: add XP (Track A) |
 
 - **REQ-CHAR-5** Subscribe to static events in `OnEnable` and unsubscribe in `OnDisable`, every time — static events outlive scenes.
@@ -305,12 +308,14 @@ public abstract class EnemyCharacter : Character
 - **REQ-ECHAR-2** `OnDied` resolves eat-vs-kill **at that moment**, whatever dealt the killing blow (MVP §4.3):
   - `GameplayContext.Player?.IsInMouth(transform.position) == true` → `GameplayEvents.RaiseCreatureEaten(Creature)`.
   - otherwise → `GameplayEvents.RaiseCreatureKilled(Creature, transform.position)`.
+  - then, either way → `GameplayEvents.RaiseCreatureDied(Creature, transform.position)` (the XP orb drops).
   - Both cases: `GameFoundationBootstrap.Instance.Flow.AddScore(Creature.scoreValue)` (MVP REQ-EAT-4), then release to the pool. Never `Destroy`.
 - **REQ-ECHAR-3** `EnemyContactDamage` (separate component) damages the player with `new DamageInfo(Creature.contactDamage, DamageType.Normal, enemy)` while `EnemyCharacter.IsTouchingPlayer()` is true (body distance, not trigger events — an enemy resting exactly at the surface may not register a physics overlap), at most once per `contactDamageInterval` per enemy. Its timer resets when the enemy is re-enabled from the pool.
 - **REQ-ECHAR-4** `BasicEnemy : EnemyCharacter` uses the default chase. **Ember and Zipper are both `BasicEnemy` prefabs with different `CreatureData` assets.**
 - **REQ-ECHAR-5** Make a new subclass only for new **behaviour**: override `Move` (e.g. zig-zag, dash), `OnDamaged` (e.g. flee when hurt) or `OnDied` (call `base.OnDied` to keep the eat/kill rule). A different number is a data change, not a subclass.
 - **REQ-ECHAR-6** `EnemySpawner` uses `UnityEngine.Pool.ObjectPool<EnemyCharacter>` per `CreatureData` (MVP §4.6). Its spawn settings are edited on the component itself (like `PlayerAbilityController`), and `Prefabs/EnemySpawner.prefab` holds the game's table, so every scene uses the same one. The table is a timeline of **phases** (run time in seconds): each phase has a `startTime`, `spawnsPerSecond`, a max-alive cap that rises smoothly from `maxAliveStart` to `maxAliveEnd` over the phase (the last phase over `lastPhaseRampSeconds`, then holds), and per-creature `percent` shares (scaled if they don't add up to 100). The active phase is the latest one whose `startTime` has passed; run time follows the foundation run timer when there is a run. Each phase also has `enemyStats` multipliers (HP, contact damage, speed, size; default ×1) applied to enemies **spawned** in that phase through `Initialize(creature, release, stats)`; `EnemyCharacter` overrides `MaxHP` / `MoveSpeed` / `BodySize` and exposes `ContactDamage`, so full HP, body scale, contact distance and separation all follow. Enemies already alive keep their multipliers; a reused pooled enemy takes the new phase's. `Initialize` must set `Creature` **and then call `ResetCharacter()`** — never rely on `OnEnable` alone, since it may run before the data is set (REQ-CHAR-4b).
-- **REQ-ECHAR-7** `XpOrbSpawner` listens to `CreatureKilled`; `XpOrb` moves toward the player inside `GameplayContext.Player.PickupRadius` and calls `GameplayEvents.RaiseXpCollected(xp)` on touch (MVP §4.7). Orbs are pooled.
+- **REQ-ECHAR-7** `XpOrbSpawner` listens to `CreatureDied` (eaten or killed); `XpOrb` moves toward the player inside `GameplayContext.Player.PickupRadius` and calls `GameplayEvents.RaiseXpCollected(xp)` on touch (MVP §4.7). Orbs are pooled. `XpOrb` and `HpOrb` share `PickupOrb` (pull + touch-to-collect); `HpOrb` is placed in the scene, heals on touch and respawns (MVP §4.8).
+- **REQ-OBJ-1** `LostSpaceship` (`Runtime/Objective`) is hidden until `appearAtSeconds` of run time, raises `Appeared` (shown by `ObjectiveBanner`), and on reach calls `Flow.FinishRun(RunOutcome.Won)`. The countdown ending is `RunOutcome.TimeUp`; `FinishRun()` with no argument (player death) is `Lost` (MVP §4.9).
 
 ---
 

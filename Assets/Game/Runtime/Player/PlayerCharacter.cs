@@ -190,13 +190,13 @@ namespace FreedomJam.Game.Player
         {
             if (!IsAlive || Stats == null || creature == null) return;
             // Stats come only from the eat stack; CreatureData.eatMultipliers is no longer used.
+            // XP is not given here: the creature drops an XP orb that the player has to pick up.
             var stacked = EatStack != null && EatStack.Record(creature);
-            Experience.AddXp(creature.xpValue);
 
             if (logEvents)
             {
-                var stack = stacked ? $"eaten {EatStack.GetCount(creature)}{NextTierText(creature)}" : "not in Eat Stack Config, XP only";
-                Debug.Log($"[Player] ate {creature.displayName} ({stack}), +{creature.xpValue} XP → level {Experience.Level}, XP {Experience.CurrentXp}/{Experience.XpToNext}", this);
+                var stack = stacked ? $"eaten {EatStack.GetCount(creature)}{NextTierText(creature)}" : "not in Eat Stack Config";
+                Debug.Log($"[Player] ate {creature.displayName} ({stack}), dropped {creature.xpValue} XP orb", this);
             }
         }
 
