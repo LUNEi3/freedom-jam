@@ -130,8 +130,11 @@ namespace FreedomJam.Game.Player
 
         void ApplyChoice(string id)
         {
+            var applied = false;
             foreach (var source in sources)
-                if (source.TryApplyChoice(id)) break;
+                if (source.TryApplyChoice(id)) { applied = true; break; }
+
+            if (applied && player != null) player.NotifyUpgradeApplied();
 
             waitingForChoice = false;
             ShowNextLevelChoices();
