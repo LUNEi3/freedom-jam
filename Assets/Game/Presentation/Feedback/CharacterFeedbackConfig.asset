@@ -28,14 +28,22 @@ MonoBehaviour:
   damageNumberColor: {r: 1, g: 1, b: 1, a: 1}
   playerDamageNumberColor: {r: 1, g: 0, b: 0, a: 1}
   damageNumberOutlineThickness: 3
-  enemyDeathVfxPrefab: {fileID: 3017611856642274195, guid: 162b9676145fc9648b6fdc7b91e7557e, type: 3}
   damageNumberLifetime: 0.8
   damageNumberRise: 0.8
   damageNumberMinSize: 28
   damageNumberMaxSize: 48
   damageNumberScalePerPoint: 2
   damageNumberSpread: 0.25
+  playerDamageNumberSizeMultiplier: 1.35
+  enemyDeathVfxPrefab: {fileID: 3017611856642274195, guid: 162b9676145fc9648b6fdc7b91e7557e, type: 3}
+  sizeEatUpgradeBodyColor: {r: 0.9339623, g: 0.8729978, b: 0.4537647, a: 1}
+  moveSpeedEatUpgradeBodyColor: {r: 0.5913581, g: 0.9150943, b: 0.9150943, a: 1}
+  steerSpeedEatUpgradeBodyColor: {r: 0.38652548, g: 0.8113208, b: 0.38652548, a: 1}
+  eatUpgradeBodyColorFlashDuration: 0.2
   damageFlashColor: {r: 1, g: 0, b: 0, a: 1}
   damageFlashDuration: 0.12
   invincibilityCyclesPerSecond: 10
   minimumInvincibilityAlpha: 0.25
+  upgradeFlashColor: {r: 0.2, g: 1, b: 0.3, a: 1}
+  upgradeFlashDuration: 0.3
+  upgradeParticleCount: 18

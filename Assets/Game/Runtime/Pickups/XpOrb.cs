@@ -1,4 +1,5 @@
 using System;
+using FreedomJam.Game.Player;
 using UnityEngine;
 
 namespace FreedomJam.Game.Pickups
@@ -32,6 +33,9 @@ namespace FreedomJam.Game.Pickups
 
         protected override void Collect(IPlayer player)
         {
+            if (player.Character != null && player.Character.TryGetComponent(out PlayerAudioFeedback audioFeedback))
+                audioFeedback.PlayCollect();
+
             GameplayEvents.RaiseXpCollected(Xp);
             Xp = 0;
             if (releaseToPool != null) releaseToPool(this);

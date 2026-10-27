@@ -231,6 +231,8 @@ MonoBehaviour:
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   audioMixer: {fileID: 24100000, guid: 1ceffd0b7e44b22489d23793105f9e26, type: 2}
   settingsPrefix: FreedomJam.
+  backgroundMusic: {fileID: 8300000, guid: 7c8b62c138b02584aa9f91758eb4fc38, type: 3}
+  backgroundMusicVolume: 0.13
 --- !u!4 &238978903
 Transform:
   m_ObjectHideFlags: 0
