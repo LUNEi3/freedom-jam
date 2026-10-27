@@ -13,6 +13,9 @@ namespace FreedomJam.Game.Player
         [SerializeField] PlayerCharacter player;
         [SerializeField] LevelUpChoicePanel panelPrefab;
         [SerializeField] MonoBehaviour[] choiceSources;
+        [SerializeField] GameplayTimeScaleCoordinator timeScaleCoordinator;
+
+        PlayerAudioFeedback audioFeedback;
 
         readonly Queue<int> pendingLevels = new Queue<int>();
         readonly List<LevelUpChoice> availableChoices = new List<LevelUpChoice>(3);
@@ -21,6 +24,7 @@ namespace FreedomJam.Game.Player
         LevelUpChoicePanel panel;
         GameInputController gameInput;
         float previousTimeScale = 1f;
+        int pauseRequestId;
         bool previousPauseInputEnabled = true;
         bool ownsPause;
         bool ownsPauseInputSuppression;
@@ -31,6 +35,8 @@ namespace FreedomJam.Game.Player
         void Awake()
         {
             if (player == null) player = GetComponent<PlayerCharacter>();
+            if (timeScaleCoordinator == null) timeScaleCoordinator = GetComponent<GameplayTimeScaleCoordinator>();
+            audioFeedback = GetComponent<PlayerAudioFeedback>();
             if (panelPrefab != null)
                 panel = Instantiate(panelPrefab);
 
@@ -90,7 +96,13 @@ namespace FreedomJam.Game.Player
             pendingLevels.Enqueue(level);
             if (!ownsPause)
             {
-                previousTimeScale = Time.timeScale;
+                if (timeScaleCoordinator != null)
+                    pauseRequestId = timeScaleCoordinator.Acquire(0f);
+                else
+                {
+                    previousTimeScale = Time.timeScale;
+                    Time.timeScale = 0f;
+                }
                 var foundation = GameFoundationBootstrap.Instance;
                 gameInput = foundation != null ? foundation.InputController : null;
                 if (gameInput != null)
@@ -99,7 +111,6 @@ namespace FreedomJam.Game.Player
                     gameInput.SetPauseInputEnabled(false);
                     ownsPauseInputSuppression = true;
                 }
-                Time.timeScale = 0f;
                 ownsPause = true;
             }
             ShowNextLevelChoices();
@@ -117,6 +128,8 @@ namespace FreedomJam.Game.Player
                     source.AppendAvailableChoices(availableChoices);
                 if (availableChoices.Count == 0) continue;
 
+                var displayedChoices = SelectChoices(availableChoices, 3);
+
                 if (panel == null || !panel.IsConfigured)
                 {
                     Debug.LogError("PlayerLevelUpFlow has no fully configured level-up panel.", this);
@@ -125,7 +138,8 @@ namespace FreedomJam.Game.Player
                 }
 
                 waitingForChoice = true;
-                panel.Show(availableChoices, ApplyChoice);
+                panel.Show(displayedChoices, ApplyChoice);
+                if (audioFeedback != null) audioFeedback.PlayLevelUp();
                 return;
             }
 
@@ -138,7 +152,11 @@ namespace FreedomJam.Game.Player
             foreach (var source in sources)
                 if (source.TryApplyChoice(id)) { applied = true; break; }
 
-            if (applied && player != null) player.NotifyUpgradeApplied();
+            if (applied)
+            {
+                if (player != null) player.NotifyUpgradeApplied();
+                if (audioFeedback != null) audioFeedback.PlayAbilitySelected();
+            }
 
             waitingForChoice = false;
             ShowNextLevelChoices();
@@ -148,7 +166,11 @@ namespace FreedomJam.Game.Player
         {
             waitingForChoice = false;
             if (!ownsPause) return;
-            Time.timeScale = previousTimeScale;
+            if (timeScaleCoordinator != null && pauseRequestId > 0)
+                timeScaleCoordinator.Release(pauseRequestId);
+            else
+                Time.timeScale = previousTimeScale;
+            pauseRequestId = 0;
             ownsPause = false;
             if (ownsPauseInputSuppression && gameInput != null)
                 gameInput.SetPauseInputEnabled(previousPauseInputEnabled);
@@ -169,6 +191,25 @@ namespace FreedomJam.Game.Player
         {
             if (EventSystem.current != null) return;
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+        }
+
+        static List<LevelUpChoice> SelectChoices(List<LevelUpChoice> choices, int maximum)
+        {
+            var selected = new List<LevelUpChoice>(Mathf.Min(maximum, choices.Count));
+            if (choices.Count <= maximum)
+            {
+                selected.AddRange(choices);
+                return selected;
+            }
+
+            var shuffled = new List<LevelUpChoice>(choices);
+            for (var i = shuffled.Count - 1; i > 0; i--)
+            {
+                var swapIndex = Random.Range(0, i + 1);
+                (shuffled[i], shuffled[swapIndex]) = (shuffled[swapIndex], shuffled[i]);
+            }
+            for (var i = 0; i < maximum; i++) selected.Add(shuffled[i]);
+            return selected;
         }
     }
 }

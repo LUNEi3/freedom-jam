@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FreedomJam.Game;
 using FreedomJam.Game.Player;
 using UnityEngine;
 
@@ -7,7 +8,7 @@ namespace FreedomJam.Game.Presentation
     /// <summary>Red accepted-hit flash and player-only transparency during invulnerability.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterHealthSource))]
-    public sealed class CharacterVisualFeedback : MonoBehaviour
+    public sealed class CharacterVisualFeedback : MonoBehaviour, ICharacterFlashFeedback
     {
         sealed class RendererState
         {
@@ -16,18 +17,27 @@ namespace FreedomJam.Game.Presentation
             public Material[] Runtime;
             public Color[] BaseColors;
             public string[] ColorProperties;
+            public Texture[] BaseTextures;
+            public string[] TextureProperties;
+            public bool[] PlayerBodyMaterials;
             public bool[] Enabled;
         }
 
         [SerializeField] CharacterFeedbackConfig config;
         [SerializeField] bool useWhiteDamageFlash;
+        [SerializeField] Material playerBodyMaterial;
         CharacterHealthSource source;
         PlayerCharacter player;
+        EatStack subscribedEatStack;
         IInvincibilityState invincibility;
         readonly List<RendererState> states = new();
         float flashRemaining;
         float activeFlashDuration;
         Color activeFlashColor;
+        Color pendingPlayerBodyColor;
+        float playerBodyColorFlashRemaining;
+        bool hasPendingPlayerBodyColor;
+        bool started;
         bool materialsReady;
 
         float FlashDuration => config != null ? config.SafeFlashDuration : 0.12f;
@@ -53,10 +63,17 @@ namespace FreedomJam.Game.Presentation
                 source.LifeEnded += OnLifeEnded;
             }
             if (player != null) player.UpgradeApplied += OnUpgradeApplied;
+            if (started) SubscribeToEatStack();
             flashRemaining = 0f;
             EnsureMaterials();
             AssignRuntimeMaterials();
             Apply(1f, 0f);
+        }
+
+        void Start()
+        {
+            started = true;
+            SubscribeToEatStack();
         }
 
         void OnDisable()
@@ -68,6 +85,11 @@ namespace FreedomJam.Game.Presentation
                 source.LifeEnded -= OnLifeEnded;
             }
             if (player != null) player.UpgradeApplied -= OnUpgradeApplied;
+            if (subscribedEatStack != null)
+            {
+                subscribedEatStack.TierReached -= OnEatStackTierReached;
+                subscribedEatStack = null;
+            }
             RestoreOriginals();
         }
 
@@ -80,6 +102,11 @@ namespace FreedomJam.Game.Presentation
         void Update()
         {
             if (!materialsReady) EnsureMaterials();
+            if (hasPendingPlayerBodyColor)
+            {
+                playerBodyColorFlashRemaining = Mathf.Max(0f, playerBodyColorFlashRemaining - Time.unscaledDeltaTime);
+                if (playerBodyColorFlashRemaining <= 0f) ApplyPendingPlayerBodyColor();
+            }
             flashRemaining = Mathf.Max(0f, flashRemaining - Time.unscaledDeltaTime);
             var blink = invincibility != null && invincibility.IsInvincible && BlinkFrequency > 0f;
             SetTransparent(blink);
@@ -131,6 +158,64 @@ namespace FreedomJam.Game.Presentation
             particles.Play();
         }
 
+        void SubscribeToEatStack()
+        {
+            if (player == null || subscribedEatStack != null || player.EatStack == null) return;
+            subscribedEatStack = player.EatStack;
+            subscribedEatStack.TierReached += OnEatStackTierReached;
+        }
+
+        void OnEatStackTierReached(CreatureData _, EatStackTier tier, int __)
+        {
+            if (tier == null || playerBodyMaterial == null) return;
+
+            Color? latestColor = null;
+            foreach (var reward in tier.Rewards)
+            {
+                if (!(reward is StatMultiplierReward statReward) || !statReward.IsValid) continue;
+                switch (statReward.Stat)
+                {
+                    case StatType.Size:
+                        latestColor = config != null ? config.sizeEatUpgradeBodyColor : Color.red;
+                        break;
+                    case StatType.MoveSpeed:
+                        latestColor = config != null ? config.moveSpeedEatUpgradeBodyColor : Color.cyan;
+                        break;
+                    case StatType.SteerSpeed:
+                        latestColor = config != null ? config.steerSpeedEatUpgradeBodyColor : Color.green;
+                        break;
+                }
+            }
+
+            if (!latestColor.HasValue) return;
+            BeginPlayerBodyColorChange(latestColor.Value);
+        }
+
+        void BeginPlayerBodyColorChange(Color color)
+        {
+            if (!materialsReady) EnsureMaterials();
+            var hasPlayerBodyMaterial = false;
+            foreach (var state in states)
+                for (var i = 0; i < state.Original.Length; i++)
+                    if (state.Original[i] == playerBodyMaterial) hasPlayerBodyMaterial = true;
+            if (!hasPlayerBodyMaterial) return;
+
+            pendingPlayerBodyColor = color;
+            playerBodyColorFlashRemaining = config != null ? config.SafeEatUpgradeBodyColorFlashDuration : 0.2f;
+            hasPendingPlayerBodyColor = playerBodyColorFlashRemaining > 0f;
+            if (!hasPendingPlayerBodyColor) ApplyPendingPlayerBodyColor();
+            else Apply(1f, 0f);
+        }
+
+        void ApplyPendingPlayerBodyColor()
+        {
+            foreach (var state in states)
+                for (var i = 0; i < state.Original.Length; i++)
+                    if (state.PlayerBodyMaterials[i]) state.BaseColors[i] = pendingPlayerBodyColor;
+            hasPendingPlayerBodyColor = false;
+            playerBodyColorFlashRemaining = 0f;
+        }
+
         void FindInvincibilityState()
         {
             foreach (var component in GetComponents<MonoBehaviour>())
@@ -172,13 +257,20 @@ namespace FreedomJam.Game.Presentation
                 var runtime = new Material[original.Length];
                 var baseColors = new Color[original.Length];
                 var properties = new string[original.Length];
+                var baseTextures = new Texture[original.Length];
+                var textureProperties = new string[original.Length];
+                var playerBodyMaterials = new bool[original.Length];
                 for (var i = 0; i < original.Length; i++)
                 {
                     if (original[i] == null) continue;
+                    playerBodyMaterials[i] = original[i] == playerBodyMaterial;
                     runtime[i] = new Material(original[i]) { name = original[i].name + " (Feedback Instance)" };
                     properties[i] = runtime[i].HasProperty("_BaseColor") ? "_BaseColor" :
                         runtime[i].HasProperty("_Color") ? "_Color" : null;
                     if (properties[i] != null) baseColors[i] = runtime[i].GetColor(properties[i]);
+                    textureProperties[i] = runtime[i].HasProperty("_BaseMap") ? "_BaseMap" :
+                        runtime[i].HasProperty("_MainTex") ? "_MainTex" : null;
+                    if (textureProperties[i] != null) baseTextures[i] = runtime[i].GetTexture(textureProperties[i]);
                 }
                 states.Add(new RendererState
                 {
@@ -187,6 +279,9 @@ namespace FreedomJam.Game.Presentation
                     Runtime = runtime,
                     BaseColors = baseColors,
                     ColorProperties = properties,
+                    BaseTextures = baseTextures,
+                    TextureProperties = textureProperties,
+                    PlayerBodyMaterials = playerBodyMaterials,
                     Enabled = new[] { renderer.enabled }
                 });
             }
@@ -256,11 +351,25 @@ namespace FreedomJam.Game.Presentation
                 {
                     var material = state.Runtime[i];
                     var property = state.ColorProperties[i];
-                    if (material == null || property == null) continue;
-                    var original = state.BaseColors[i];
-                    var blended = Color.Lerp(original, FlashColor, flash);
-                    blended.a = original.a * alphaMultiplier;
-                    material.SetColor(property, blended);
+                    if (material == null) continue;
+                    var whiteBodyColorFlash = state.PlayerBodyMaterials[i] && hasPendingPlayerBodyColor;
+                    if (property != null)
+                    {
+                        var original = state.BaseColors[i];
+                        var blended = whiteBodyColorFlash ? Color.white : Color.Lerp(original, FlashColor, flash);
+                        blended.a = original.a * alphaMultiplier;
+                        material.SetColor(property, blended);
+                    }
+
+                    if ((useWhiteDamageFlash && flash > 0f || whiteBodyColorFlash) && state.TextureProperties[i] != null)
+                    {
+                        var textureProperty = state.TextureProperties[i];
+                        var texture = Texture2D.whiteTexture;
+                        if (material.GetTexture(textureProperty) != texture)
+                            material.SetTexture(textureProperty, texture);
+                    }
+                    else if (state.TextureProperties[i] != null && material.GetTexture(state.TextureProperties[i]) != state.BaseTextures[i])
+                        material.SetTexture(state.TextureProperties[i], state.BaseTextures[i]);
                 }
             }
         }

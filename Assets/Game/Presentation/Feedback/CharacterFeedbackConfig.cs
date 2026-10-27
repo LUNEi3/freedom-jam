@@ -32,9 +32,14 @@ namespace FreedomJam.Game.Presentation
         public float damageNumberMaxSize = 48f;
         public float damageNumberScalePerPoint = 2f;
         public float damageNumberSpread = 0.25f;
+        [Min(1f)] public float playerDamageNumberSizeMultiplier = 1.35f;
         public GameObject enemyDeathVfxPrefab;
 
         [Header("Character Visuals")]
+        public Color sizeEatUpgradeBodyColor = Color.red;
+        public Color moveSpeedEatUpgradeBodyColor = Color.cyan;
+        public Color steerSpeedEatUpgradeBodyColor = Color.green;
+        [Min(0f)] public float eatUpgradeBodyColorFlashDuration = 0.2f;
         public Color damageFlashColor = Color.red;
         public float damageFlashDuration = 0.12f;
         public float invincibilityCyclesPerSecond = 10f;
@@ -44,6 +49,7 @@ namespace FreedomJam.Game.Presentation
         [Min(0)] public int upgradeParticleCount = 18;
 
         public float SafeNumberLifetime => Mathf.Max(0.05f, damageNumberLifetime);
+        public float SafeEatUpgradeBodyColorFlashDuration => Mathf.Max(0f, eatUpgradeBodyColorFlashDuration);
         public float SafeFlashDuration => Mathf.Max(0f, damageFlashDuration);
         public float SafeBlinkFrequency => Mathf.Max(0f, invincibilityCyclesPerSecond);
         public float SafeDamageNumberOutlineThickness => Mathf.Max(1f, damageNumberOutlineThickness);
