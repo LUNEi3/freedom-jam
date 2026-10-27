@@ -203,6 +203,7 @@ GameObject:
   - component: {fileID: 142210374779571676}
   - component: {fileID: 7655617702358377855}
   - component: {fileID: 7460554510558373923}
+  - component: {fileID: 7042379998667653981}
   m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
@@ -494,6 +495,23 @@ MonoBehaviour:
   icons: []
   readyPopScale: 1.2
   readyPopSeconds: 0.18
+--- !u!114 &7042379998667653981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5090164919114779854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81e5950aeb7934cee981d628f820db02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.EatStackPanel
+  player: {fileID: 9099370247998457587}
+  panelPrefab: {fileID: 2447204858757176101, guid: bd17fd2e29c164e38a3ca700546dd74f, type: 3}
+  maxColor: {r: 0.45, g: 1, b: 0.55, a: 1}
+  flashColor: {r: 1, g: 0.85, b: 0.3, a: 0.55}
+  flashSeconds: 0.6
 --- !u!1001 &8723500376240363981
 PrefabInstance:
   m_ObjectHideFlags: 0

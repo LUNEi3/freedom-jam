@@ -82,6 +82,33 @@ namespace FreedomJam.Game.Player
 
         public float GetMultiplier(StatType stat) => multipliers.Get(stat);
 
+        /// <summary>Creatures with tiers, in the table's order (empty if the table can't list them). For the eat-progress panel.</summary>
+        public IReadOnlyList<CreatureData> TrackedCreatures =>
+            table is IEatStackCreatureList list && list.Creatures != null ? list.Creatures : System.Array.Empty<CreatureData>();
+
+        /// <summary>The next tier to reach, or null when every tier is reached.</summary>
+        public EatStackTier GetNextTier(CreatureData creature)
+        {
+            var tiers = GetTiers(creature);
+            if (tiers == null) return null;
+            var count = GetCount(creature);
+            EatStackTier next = null;
+            foreach (var tier in tiers)
+                if (tier != null && tier.EatCount > count && (next == null || tier.EatCount < next.EatCount))
+                    next = tier;
+            return next;
+        }
+
+        /// <summary>Read-only summary of one creature's progress, for the eat-progress panel.</summary>
+        public EatProgress GetProgress(CreatureData creature)
+        {
+            var current = GetCurrentTier(creature);
+            var next = GetNextTier(creature);
+            return new EatProgress(creature, GetCount(creature), current != null ? current.EatCount : 0,
+                next != null ? next.EatCount : -1, GetTierNumber(creature),
+                current != null ? current.Describe() : null, next != null ? next.Describe() : null);
+        }
+
         IReadOnlyList<EatStackTier> GetTiers(CreatureData creature) =>
             creature != null ? table.GetTiers(creature) : null;
 
