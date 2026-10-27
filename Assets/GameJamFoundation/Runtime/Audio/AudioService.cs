@@ -61,7 +61,7 @@ namespace FreedomJam.Foundation
 
         public bool IsMuted(AudioBus bus) => muted[GetBusIndex(bus)];
 
-        public void PlayMusic(AudioClip clip, bool loop = true)
+        public void PlayMusic(AudioClip clip, bool loop = true, float volume = 1f)
         {
             EnsureInitialized();
             if (clip == null) return;
@@ -69,14 +69,25 @@ namespace FreedomJam.Foundation
             musicSource.Stop();
             musicSource.clip = clip;
             musicSource.loop = loop;
+            musicSource.volume = SanitizeLevel(volume);
             musicSource.Play();
         }
 
-        public void PlaySfx(AudioClip clip, float volume = 1f)
+        public void StopMusic()
+        {
+            if (musicSource == null) return;
+            musicSource.Stop();
+            musicSource.clip = null;
+        }
+
+        public void PlaySfx(AudioClip clip, float volume = 1f, float pitch = 1f)
         {
             EnsureInitialized();
             if (clip == null) return;
+            var previousPitch = sfxSource.pitch;
+            sfxSource.pitch = SanitizePitch(pitch);
             sfxSource.PlayOneShot(clip, SanitizeLevel(volume));
+            sfxSource.pitch = previousPitch;
         }
 
         public static string GetParameterName(AudioBus bus)
@@ -168,6 +179,12 @@ namespace FreedomJam.Foundation
             if (float.IsNaN(value) || float.IsNegativeInfinity(value)) return 0f;
             if (float.IsPositiveInfinity(value)) return 1f;
             return Mathf.Clamp01(value);
+        }
+
+        static float SanitizePitch(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value)) return 1f;
+            return Mathf.Clamp(value, 0.1f, 3f);
         }
     }
 }

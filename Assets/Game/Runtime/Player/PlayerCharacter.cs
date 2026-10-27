@@ -35,6 +35,9 @@ namespace FreedomJam.Game.Player
         Vector3 dashDirection;
         float dashDistanceRemaining;
         float dashSpeed;
+        float reviveMoveSpeedMultiplier = 1f;
+        bool reviveInvulnerability;
+        [SerializeField] ReviveAbility reviveAbility;
 
         public PlayerStats Stats { get; private set; }
         public PlayerExperience Experience { get; private set; }
@@ -74,6 +77,7 @@ namespace FreedomJam.Game.Player
             prefabScale = transform.localScale;
             steering = GetComponent<ISteeringInput>();
             movementCollider = GetComponent<SphereCollider>();
+            if (reviveAbility == null) reviveAbility = GetComponent<ReviveAbility>();
 
             if (config == null) Debug.LogError("PlayerCharacter needs a PlayerConfig. The player will not move or take damage.", this);
             if (controller == null) Debug.LogError("PlayerCharacter needs a CharacterController. The player will not move.", this);
@@ -130,6 +134,8 @@ namespace FreedomJam.Game.Player
             invulnerableUntil = 0f;
             dashDistanceRemaining = 0f;
             dashSpeed = 0f;
+            reviveMoveSpeedMultiplier = 1f;
+            reviveInvulnerability = false;
             lastMaxHP = MaxHP;
             ApplyBodyScale();
         }
@@ -141,7 +147,7 @@ namespace FreedomJam.Game.Player
             var steer = steering != null ? steering.Steer : 0f;
             var rotation = transform.rotation * Quaternion.Euler(0f, steer * SteerSpeed * deltaTime, 0f);
 
-            var displacement = rotation * Vector3.forward * (MoveSpeed * deltaTime);
+            var displacement = rotation * Vector3.forward * (MoveSpeed * reviveMoveSpeedMultiplier * deltaTime);
             if (dashDistanceRemaining > 0f && dashSpeed > 0f)
             {
                 var dashStep = Mathf.Min(dashDistanceRemaining, dashSpeed * deltaTime);
@@ -203,9 +209,19 @@ namespace FreedomJam.Game.Player
         /// <summary>Body radius = BodySize × 0.5 (architecture §3.6): a prefab built 1 unit wide scales with BodySize.</summary>
         void ApplyBodyScale() => transform.localScale = prefabScale * BodySize;
 
-        public bool IsInvincible => IsAlive && Time.time < invulnerableUntil;
+        public bool IsInvincible => IsAlive && (Time.time < invulnerableUntil || reviveInvulnerability ||
+            (reviveAbility != null && reviveAbility.BlocksDamage));
 
         protected override bool CanReceiveDamage(DamageInfo info) => !IsInvincible;
+
+        protected override bool TryPreventDeath(DamageInfo killingBlow) =>
+            reviveAbility != null && reviveAbility.TryPreventLethalDamage(killingBlow);
+
+        public void SetReviveProtection(bool active, float speedMultiplier = 1f)
+        {
+            reviveInvulnerability = active;
+            reviveMoveSpeedMultiplier = active ? Mathf.Max(1f, speedMultiplier) : 1f;
+        }
 
         protected override void OnDamaged(DamageInfo info)
         {

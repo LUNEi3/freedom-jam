@@ -44,6 +44,10 @@ namespace FreedomJam.Game.Player
             new SuckLevelSettings { range = 8.5f, coneAngle = 100f, pullDuration = 0.6f, pullSpeed = 14f, cooldown = 9f }
         };
 
+        [Header("Ability VFX")]
+        [SerializeField] ParticleSystem dashVfx;
+        [SerializeField] ParticleSystem suckVfx;
+
         [Header("Size scaling (1 + (size ÷ starting size − 1) × strength)")]
         [Tooltip("How much Dash distance grows with player size. 0 = never, 1 = same rate as size.")]
         [SerializeField] float dashDistanceSizeStrength = 1f;
@@ -51,6 +55,7 @@ namespace FreedomJam.Game.Player
         [SerializeField] float suckRangeSizeStrength = 1f;
 
         PlayerCharacter player;
+        PlayerAudioFeedback audioFeedback;
         float dashReadyAt;
         float suckReadyAt;
 
@@ -72,7 +77,11 @@ namespace FreedomJam.Game.Player
         DashLevelSettings CurrentDash => GetLevel(dashLevels, DashLevel);
         SuckLevelSettings CurrentSuck => GetLevel(suckLevels, SuckLevel);
 
-        void Awake() => player = GetComponent<PlayerCharacter>();
+        void Awake()
+        {
+            player = GetComponent<PlayerCharacter>();
+            audioFeedback = GetComponent<PlayerAudioFeedback>();
+        }
 
         void Update()
         {
@@ -135,6 +144,8 @@ namespace FreedomJam.Game.Player
             if (settings == null || DashCooldownRemaining > 0f) return;
             if (!player.TryDashForward(DashDistance, settings.speed)) return;
             dashReadyAt = Time.time + Mathf.Max(0f, settings.cooldown);
+            PlayVfx(dashVfx);
+            if (audioFeedback != null) audioFeedback.PlayDash();
         }
 
         void ActivateSuck()
@@ -142,6 +153,8 @@ namespace FreedomJam.Game.Player
             var settings = CurrentSuck;
             if (settings == null || SuckCooldownRemaining > 0f) return;
             suckReadyAt = Time.time + Mathf.Max(0f, settings.cooldown);
+            PlayVfx(suckVfx);
+            if (audioFeedback != null) audioFeedback.PlaySuck();
 
             var origin = player.transform.position;
             var forward = player.transform.forward;
@@ -168,6 +181,13 @@ namespace FreedomJam.Game.Player
 
                 orb.StartSuction(speed);
             }
+        }
+
+        static void PlayVfx(ParticleSystem effect)
+        {
+            if (effect == null) return;
+            effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            effect.Play(true);
         }
 
         float SizeMultiplier(float strength) => player != null ? SizeScaling.Multiplier(player.SizeRatio, strength) : 1f;

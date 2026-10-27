@@ -48,7 +48,7 @@ namespace FreedomJam.Game
             CurrentHP = Mathf.Max(0f, CurrentHP - info.Amount);
             OnDamaged(info);
             Damaged?.Invoke(this, info);
-            if (CurrentHP <= 0f) Die(info);
+            if (CurrentHP <= 0f && !TryPreventDeath(info)) Die(info);
         }
 
         public void Heal(float amount)
@@ -69,6 +69,8 @@ namespace FreedomJam.Game
         protected abstract void Tick(float deltaTime);
         /// <summary>Return false to ignore a hit (e.g. player invulnerability window).</summary>
         protected virtual bool CanReceiveDamage(DamageInfo info) => true;
+        /// <summary>Return true to keep this character alive after a lethal hit.</summary>
+        protected virtual bool TryPreventDeath(DamageInfo killingBlow) => false;
         /// <summary>Clear anything set during a life, so pooled objects are reusable.</summary>
         protected virtual void OnReset() { }
         protected virtual void OnDamaged(DamageInfo info) { }

@@ -14,6 +14,7 @@ namespace FreedomJam.Game.Player
         const float BiteFlashSeconds = 0.2f;
 
         [SerializeField] PlayerCharacter player;
+        PlayerAudioFeedback audioFeedback;
         [Tooltip("Layers the mouth can bite. Normally only Enemy.")]
         [SerializeField] LayerMask targetMask;
 
@@ -29,6 +30,12 @@ namespace FreedomJam.Game.Player
         readonly List<IDamageable> expired = new();
         readonly List<(Vector3 position, float time)> recentBites = new();
         float lastBiteTime = float.NegativeInfinity;
+
+        void Awake()
+        {
+            if (player == null) player = GetComponent<PlayerCharacter>();
+            if (player != null) audioFeedback = player.GetComponent<PlayerAudioFeedback>();
+        }
 
         /// <summary>True when a target of the configured radius at this position touches the cone.</summary>
         public bool Contains(Vector3 worldPosition) =>
@@ -50,6 +57,7 @@ namespace FreedomJam.Game.Player
             var searchRadius = player.MouthRange + player.MouthTargetRadius;
             var count = Physics.OverlapSphereNonAlloc(origin, searchRadius, hits, targetMask, QueryTriggerInteraction.Collide);
             seenThisFrame.Clear();
+            var hitAnyEnemy = false;
 
             for (var i = 0; i < count; i++)
             {
@@ -64,8 +72,10 @@ namespace FreedomJam.Game.Player
 
                 nextBiteTime[target] = now + Mathf.Max(0.01f, player.MouthTickInterval);
                 Bite(target, position, now);
+                hitAnyEnemy = true;
             }
 
+            if (hitAnyEnemy && audioFeedback != null) audioFeedback.PlayEnemyHit();
             ForgetExpiredCooldowns(now);
         }
 

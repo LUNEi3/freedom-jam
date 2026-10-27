@@ -15,6 +15,9 @@ namespace FreedomJam.Foundation
         [SerializeField] InputActionAsset inputActions;
         [SerializeField] AudioMixer audioMixer;
         [SerializeField] string settingsPrefix = "FreedomJam.";
+        [Header("Background Music")]
+        [SerializeField] AudioClip backgroundMusic;
+        [SerializeField, Range(0f, 1f)] float backgroundMusicVolume = 1f;
 
         public static GameFoundationBootstrap Instance => instance;
         public GameConfig Config => config;
@@ -24,6 +27,7 @@ namespace FreedomJam.Foundation
         public GameInputController InputController { get; private set; }
         public InputBindingService InputBindings { get; private set; }
         public AudioService Audio { get; private set; }
+        bool audioInitialized;
 
         void Awake()
         {
@@ -53,17 +57,41 @@ namespace FreedomJam.Foundation
 
             Flow = new GameFlowController(config, SettingsStore,
                 sceneName => SceneManager.LoadScene(sceneName),
-                value => Time.timeScale = value,
+                SetFlowTimeScale,
                 QuitBuiltApplication,
-                () => Time.timeScale);
+                GetCurrentTimeScale);
             Flow.StateChanged += InputController.SetGameplayState;
+            Flow.StateChanged += OnFlowStateChanged;
             Flow.ResultShown += EnsureResultPopup;
             Audio = new AudioService();
         }
 
         void Start()
         {
-            if (Audio != null) Audio.Initialize(audioMixer, CurrentSettings);
+            if (Audio == null) return;
+            Audio.Initialize(audioMixer, CurrentSettings);
+            audioInitialized = true;
+            if (Flow != null && Flow.State == GameState.Playing)
+                PlayBackgroundMusic();
+        }
+
+        void OnFlowStateChanged(GameState state)
+        {
+            if (state == GameState.Playing)
+            {
+                PlayBackgroundMusic();
+                return;
+            }
+
+            if (state == GameState.Menu ||
+                state == GameState.Result && Flow.CurrentRun != null && Flow.CurrentRun.Outcome != RunOutcome.Won)
+                Audio?.StopMusic();
+        }
+
+        void PlayBackgroundMusic()
+        {
+            if (!audioInitialized || Audio == null || backgroundMusic == null) return;
+            Audio.PlayMusic(backgroundMusic, true, backgroundMusicVolume);
         }
 
         /// <summary>Popup mode: if the Game scene has no result popup placed in it, spawn one from GameConfig.</summary>
@@ -93,6 +121,31 @@ namespace FreedomJam.Foundation
             else if (Flow.State == GameState.Paused) Flow.Resume();
         }
 
+        static void SetFlowTimeScale(float value)
+        {
+            var scaleOverride = FindTimeScaleOverride();
+            if (scaleOverride != null)
+            {
+                scaleOverride.SetFlowPaused(value <= 0f);
+                return;
+            }
+            Time.timeScale = value;
+        }
+
+        static float GetCurrentTimeScale()
+        {
+            var scaleOverride = FindTimeScaleOverride();
+            return scaleOverride != null ? scaleOverride.CurrentScale : Time.timeScale;
+        }
+
+        static IGameplayTimeScaleOverride FindTimeScaleOverride()
+        {
+            foreach (var component in FindObjectsByType<MonoBehaviour>())
+                if (component is IGameplayTimeScaleOverride scaleOverride)
+                    return scaleOverride;
+            return null;
+        }
+
         static void QuitBuiltApplication()
         {
             if (Application.isEditor) return;
@@ -101,7 +154,11 @@ namespace FreedomJam.Foundation
 
         void OnDestroy()
         {
-            if (Flow != null && InputController != null) Flow.StateChanged -= InputController.SetGameplayState;
+            if (Flow != null)
+            {
+                if (InputController != null) Flow.StateChanged -= InputController.SetGameplayState;
+                Flow.StateChanged -= OnFlowStateChanged;
+            }
             if (InputController != null) InputController.PausePressed -= OnPausePressed;
             if (Audio != null) Audio.Dispose();
             if (instance == this) instance = null;
