@@ -70,6 +70,25 @@ namespace FreedomJam.Game.Enemy
             return Mathf.Max(0, Mathf.RoundToInt(Mathf.Lerp(startValue, endValue, progress)));
         }
 
+        /// <summary>Overtime escalation steps taken at this run time: 0 until the first full step after start.</summary>
+        public static int OvertimeSteps(float runSeconds, float startSeconds, float stepSeconds) =>
+            runSeconds < startSeconds || !(stepSeconds > 0f) ? 0 : Mathf.FloorToInt((runSeconds - startSeconds) / stepSeconds);
+
+        /// <summary>Phase stats with overtime on top: HP and damage × hpAndDamage^steps, speed × speed^steps, size unchanged.</summary>
+        public static EnemyStatMultipliers Escalate(EnemyStatMultipliers stats, int steps, float hpAndDamagePerStep, float speedPerStep)
+        {
+            if (steps <= 0) return stats;
+            var hpAndDamage = Mathf.Pow(Mathf.Max(1f, hpAndDamagePerStep), steps);
+            var speed = Mathf.Pow(Mathf.Max(1f, speedPerStep), steps);
+            return new EnemyStatMultipliers
+            {
+                hp = EnemyStatMultipliers.Safe(stats.hp) * hpAndDamage,
+                damage = EnemyStatMultipliers.Safe(stats.damage) * hpAndDamage,
+                speed = EnemyStatMultipliers.Safe(stats.speed) * speed,
+                size = EnemyStatMultipliers.Safe(stats.size),
+            };
+        }
+
         /// <summary>Index chosen by roll01 in [0, 1] among positive weights, or -1 if none is positive.</summary>
         public static int PickWeighted(IReadOnlyList<float> weights, float roll01)
         {

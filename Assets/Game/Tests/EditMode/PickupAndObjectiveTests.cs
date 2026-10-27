@@ -110,34 +110,34 @@ namespace FreedomJam.Game.Tests
             finally { GameplayEvents.XpCollected -= onXp; }
         }
 
-        LostSpaceship NewSpaceship(Vector3 at, out GameObject visual)
+        LostSpaceship NewSpaceship(Vector3 at, out GameObject effect)
         {
             orbGo = new GameObject("Spaceship"); orbGo.transform.position = at;
-            visual = new GameObject("Visual"); visual.transform.SetParent(orbGo.transform);
+            effect = new GameObject("ReadyEffect"); effect.transform.SetParent(orbGo.transform);
             var ship = orbGo.AddComponent<LostSpaceship>();
             var so = new SerializedObject(ship);
-            so.FindProperty("appearAtSeconds").floatValue = 90;
+            so.FindProperty("activateAtSeconds").floatValue = 90;
             so.FindProperty("reachRadius").floatValue = 2;
-            so.FindProperty("visual").objectReferenceValue = visual;
+            so.FindProperty("readyEffect").objectReferenceValue = effect;
             so.ApplyModifiedPropertiesWithoutUndo();
-            visual.SetActive(false);
+            effect.SetActive(false);
             return ship;
         }
 
-        [Test] public void Spaceship_AppearsAtItsTimeAndRaisesAppearedOnce()
+        [Test] public void Spaceship_ActivatesAtItsTimeAndRaisesActivatedOnce()
         {
-            var ship = NewSpaceship(new Vector3(25, 0, 0), out var visual);
-            var appeared = 0; ship.Appeared += _ => appeared++;
-            ship.Step(89f); Assert.That(ship.HasAppeared, Is.False); Assert.That(visual.activeSelf, Is.False);
+            var ship = NewSpaceship(new Vector3(25, 0, 0), out var effect);
+            var activated = 0; ship.Activated += _ => activated++;
+            ship.Step(89f); Assert.That(ship.IsActive, Is.False); Assert.That(effect.activeSelf, Is.False);
             ship.Step(90f); ship.Step(95f);
-            Assert.That(ship.HasAppeared, Is.True); Assert.That(visual.activeSelf, Is.True); Assert.That(appeared, Is.EqualTo(1));
+            Assert.That(ship.IsActive, Is.True); Assert.That(effect.activeSelf, Is.True); Assert.That(activated, Is.EqualTo(1));
             Assert.That(ship.IsReached, Is.False);
         }
-        [Test] public void Spaceship_ReachedOnlyAfterItAppears()
+        [Test] public void Spaceship_TouchedBeforeActivation_DoesNothing_ThenWinsOnceActive()
         {
             var ship = NewSpaceship(new Vector3(2, 0, 0), out _);
             var reached = 0; ship.Reached += _ => reached++;
-            ship.Step(10f); Assert.That(ship.IsReached, Is.False);
+            ship.Step(10f); ship.Step(89.9f); Assert.That(ship.IsReached, Is.False);
             ship.Step(90f); ship.Step(91f);
             Assert.That(ship.IsReached, Is.True); Assert.That(reached, Is.EqualTo(1));
         }

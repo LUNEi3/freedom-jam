@@ -44,6 +44,17 @@ namespace FreedomJam.Foundation.Tests
             run.Advance(1f);
             Assert.That(run.Outcome, Is.EqualTo(RunOutcome.TimeUp)); Assert.That(run.ElapsedSeconds, Is.EqualTo(120f));
         }
+        [Test] public void Countdown_WithoutEndAtZero_GoesIntoOvertime()
+        {
+            config.timerMode = TimerMode.Countdown; config.countdownSeconds = 10; config.endRunWhenCountdownEnds = false;
+            var run = new GameRunData(config);
+            Assert.That(run.Advance(8), Is.False); Assert.That(run.IsOvertime, Is.False);
+            Assert.That(run.Advance(5), Is.False);
+            Assert.That(run.IsOvertime, Is.True); Assert.That(run.IsComplete, Is.False);
+            Assert.That(run.RemainingSeconds, Is.Zero); Assert.That(run.DisplaySeconds, Is.Zero);
+            Assert.That(run.ElapsedSeconds, Is.EqualTo(13f));
+            run.Advance(7); Assert.That(run.ElapsedSeconds, Is.EqualTo(20f));
+        }
         [Test] public void Complete_KeepsFirstOutcome()
         {
             config.timerMode = TimerMode.Countdown; config.countdownSeconds = 10;

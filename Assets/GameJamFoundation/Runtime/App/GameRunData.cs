@@ -16,8 +16,11 @@ namespace FreedomJam.Foundation
         public RunOutcome Outcome { get; private set; }
         public TimerMode TimerMode { get; }
         public float DisplaySeconds => TimerMode == TimerMode.Countdown ? RemainingSeconds : ElapsedSeconds;
+        /// <summary>Countdown reached 00:00 but the run goes on (GameConfig.endRunWhenCountdownEnds is off).</summary>
+        public bool IsOvertime => TimerMode == TimerMode.Countdown && !endsAtZero && RemainingSeconds <= 0f;
 
         readonly float countdownTotal;
+        readonly bool endsAtZero;
 
         public GameRunData(GameConfig config)
         {
@@ -26,6 +29,7 @@ namespace FreedomJam.Foundation
             TimerMode = config.timerMode;
             RemainingSeconds = IsFinite(config.countdownSeconds) ? Math.Max(0, config.countdownSeconds) : 0;
             countdownTotal = RemainingSeconds;
+            endsAtZero = config.endRunWhenCountdownEnds;
         }
 
         public void AddScore(int delta)
@@ -49,6 +53,12 @@ namespace FreedomJam.Foundation
             ElapsedSeconds += consumed;
             RemainingSeconds = Math.Max(0, RemainingSeconds - consumed);
             if (RemainingSeconds > 0) return false;
+            if (!endsAtZero)
+            {
+                // Overtime: the clock stays at 00:00 while run time keeps counting.
+                ElapsedSeconds += deltaSeconds - consumed;
+                return false;
+            }
             // Summed frame times land a hair under the total; a timed-out run lasted exactly the countdown.
             ElapsedSeconds = countdownTotal;
             Complete(RunOutcome.TimeUp);

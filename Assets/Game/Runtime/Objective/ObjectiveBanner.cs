@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace FreedomJam.Game.Objective
 {
-    /// <summary>Shows the spaceship's message in the middle of the screen for a few seconds when it appears.</summary>
+    /// <summary>Shows the spaceship's message in the middle of the screen for a few seconds when it becomes usable.</summary>
     public sealed class ObjectiveBanner : MonoBehaviour
     {
         [SerializeField] LostSpaceship spaceship;
@@ -15,18 +15,18 @@ namespace FreedomJam.Game.Objective
 
         void Awake() => SetVisible(false);
 
-        void OnEnable() { if (spaceship != null) spaceship.Appeared += OnAppeared; }
-        void OnDisable() { if (spaceship != null) spaceship.Appeared -= OnAppeared; }
+        void OnEnable() { if (spaceship != null) spaceship.Activated += OnActivated; }
+        void OnDisable() { if (spaceship != null) spaceship.Activated -= OnActivated; }
 
         void Update()
         {
             if (label != null && label.enabled && Time.unscaledTime >= hideAt) SetVisible(false);
         }
 
-        void OnAppeared(LostSpaceship ship)
+        void OnActivated(LostSpaceship ship)
         {
             if (label == null) return;
-            label.text = ship.AppearMessage;
+            label.text = ship.ReadyMessage;
             hideAt = Time.unscaledTime + showSeconds;
             SetVisible(true);
         }

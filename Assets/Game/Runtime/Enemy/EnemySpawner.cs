@@ -38,6 +38,27 @@ namespace FreedomJam.Game.Enemy
             public EnemyStatMultipliers enemyStats = EnemyStatMultipliers.One;
         }
 
+        /// <summary>Endless escalation once the countdown is over, so staying out gets harder and harder.</summary>
+        [Serializable]
+        public sealed class OvertimeSettings
+        {
+            public bool enabled = true;
+            [Tooltip("Run time in seconds when overtime starts (the end of the countdown).")]
+            [Min(0f)] public float startSeconds = 120f;
+            [Tooltip("Every this many seconds of overtime, everything below steps up once more.")]
+            [Min(0.1f)] public float stepSeconds = 10f;
+            [Tooltip("Added to the phase's spawns per second at each step.")]
+            [Min(0f)] public float spawnsPerSecondPerStep = 2f;
+            [Tooltip("Added to the phase's max alive at each step.")]
+            [Min(0)] public int maxAlivePerStep = 25;
+            [Tooltip("Max alive never goes above this in overtime, to protect the frame rate. Stats keep growing.")]
+            [Min(1)] public int maxAliveCap = 200;
+            [Tooltip("HP and contact damage of newly spawned enemies are multiplied by this at each step.")]
+            [Min(1f)] public float hpAndDamageMultiplierPerStep = 1.25f;
+            [Tooltip("Speed of newly spawned enemies is multiplied by this at each step.")]
+            [Min(1f)] public float speedMultiplierPerStep = 1.05f;
+        }
+
         [Header("Spawn area")]
         [Tooltip("Enemies appear on this ring around the player; keep it outside the camera view.")]
         [SerializeField, Min(0f)] float spawnRingRadius = 18f;
@@ -58,6 +79,9 @@ namespace FreedomJam.Game.Enemy
                 enemyStats = new EnemyStatMultipliers { hp = 2f, damage = 2f, speed = 1.3f, size = 1.3f } },
         };
 
+        [Header("Overtime (after the countdown; see OvertimeSettings tooltips)")]
+        [SerializeField] OvertimeSettings overtime = new OvertimeSettings();
+
         readonly Dictionary<CreatureData, ObjectPool<EnemyCharacter>> pools = new();
         readonly List<EnemyCharacter> alive = new();
         readonly List<float> weights = new();
@@ -68,8 +92,19 @@ namespace FreedomJam.Game.Enemy
         public float ElapsedSeconds { get; private set; }
         /// <summary>Phase active right now, or null if there are no phases.</summary>
         public SpawnPhase CurrentPhase => SpawnMath.PhaseAt(phases, ElapsedSeconds);
-        /// <summary>Max enemies alive right now.</summary>
-        public int CurrentMaxAlive => SpawnMath.MaxAliveAt(phases, lastPhaseRampSeconds, ElapsedSeconds);
+        /// <summary>Max enemies alive right now, including overtime escalation.</summary>
+        public int CurrentMaxAlive
+        {
+            get
+            {
+                var maxAlive = SpawnMath.MaxAliveAt(phases, lastPhaseRampSeconds, ElapsedSeconds);
+                if (!InOvertime) return maxAlive;
+                return Mathf.Min(overtime.maxAliveCap, maxAlive + OvertimeStep * overtime.maxAlivePerStep);
+            }
+        }
+        public bool InOvertime => overtime != null && overtime.enabled && ElapsedSeconds >= overtime.startSeconds;
+        /// <summary>How many escalation steps overtime has taken (0 in the first step and before overtime).</summary>
+        public int OvertimeStep => InOvertime ? SpawnMath.OvertimeSteps(ElapsedSeconds, overtime.startSeconds, overtime.stepSeconds) : 0;
 
         void Awake() => release = Release;
 
@@ -86,7 +121,8 @@ namespace FreedomJam.Game.Enemy
             var phase = CurrentPhase;
             if (phase == null) return;
 
-            spawnBudget += Mathf.Max(0f, phase.spawnsPerSecond) * deltaTime;
+            var spawnsPerSecond = phase.spawnsPerSecond + (InOvertime ? OvertimeStep * overtime.spawnsPerSecondPerStep : 0f);
+            spawnBudget += Mathf.Max(0f, spawnsPerSecond) * deltaTime;
             var maxAlive = CurrentMaxAlive;
             while (spawnBudget >= 1f)
             {
@@ -158,7 +194,10 @@ namespace FreedomJam.Game.Enemy
 
             enemy.transform.SetPositionAndRotation(
                 SpawnMath.RingPoint(center, spawnRingRadius, Random.value), Quaternion.identity);
-            enemy.Initialize(creature, release, phase.enemyStats);
+            var stats = InOvertime
+                ? SpawnMath.Escalate(phase.enemyStats, OvertimeStep, overtime.hpAndDamageMultiplierPerStep, overtime.speedMultiplierPerStep)
+                : phase.enemyStats;
+            enemy.Initialize(creature, release, stats);
             alive.Add(enemy);
             return true;
         }

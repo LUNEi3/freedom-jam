@@ -20,6 +20,7 @@ MonoBehaviour:
   resultPopupPrefab: {fileID: 7600125862657105340, guid: 78237b21d2bd2f04db76b4c8f8cdaf04, type: 3}
   timerMode: 1
   countdownSeconds: 120
+  endRunWhenCountdownEnds: 0
   initialScore: 0
   bestScoreKey: game-jam-foundation
   bestScoreDefault: 0

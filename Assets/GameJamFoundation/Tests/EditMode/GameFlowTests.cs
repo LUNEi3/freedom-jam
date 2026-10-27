@@ -148,6 +148,23 @@ namespace FreedomJam.Foundation.Tests
         }
 
         [Test]
+        public void Overtime_CountdownEndDoesNotFinishRun_WinStillDoes()
+        {
+            config.timerMode = TimerMode.Countdown;
+            config.endRunWhenCountdownEnds = false;
+            flow.StartRun();
+
+            flow.Tick(0.6f);
+            flow.Tick(5f);
+            Assert.That(flow.State, Is.EqualTo(GameState.Playing));
+            Assert.That(flow.CurrentRun.IsOvertime, Is.True);
+            Assert.That(loadedScenes.Contains("Result"), Is.False);
+
+            flow.FinishRun(RunOutcome.Won);
+            Assert.That(flow.CurrentRun.Outcome, Is.EqualTo(RunOutcome.Won));
+        }
+
+        [Test]
         public void FinishRun_Won_BeforeCountdownEnds_IsWon()
         {
             config.timerMode = TimerMode.Countdown;
