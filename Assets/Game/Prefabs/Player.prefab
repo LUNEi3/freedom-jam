@@ -207,6 +207,8 @@ GameObject:
   - component: {fileID: 843289175821946079}
   - component: {fileID: 843289175821946080}
   - component: {fileID: 6598849753188252974}
+  - component: {fileID: 5315263201519612097}
+  - component: {fileID: 9047818227186524264}
   m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
@@ -419,21 +421,21 @@ MonoBehaviour:
   dashLevels:
   - distance: 3
     speed: 12
-    cooldown: 10
+    cooldown: 6
   - distance: 4
     speed: 12
-    cooldown: 9
+    cooldown: 4
   suckLevels:
   - range: 7
     coneAngle: 100
     pullDuration: 0.6
     pullSpeed: 14
-    cooldown: 10
+    cooldown: 5
   - range: 8.5
     coneAngle: 100
-    pullDuration: 0.6
+    pullDuration: 1
     pullSpeed: 14
-    cooldown: 9
+    cooldown: 7
   dashVfx: {fileID: 6889691537336371183}
   suckVfx: {fileID: 4141988089673157071}
   dashDistanceSizeStrength: 1
@@ -544,13 +546,13 @@ MonoBehaviour:
   levels:
   - radius: 4
     damage: 25
-    cooldown: 12
+    cooldown: 15
     slowMotionScale: 0.1
     slowMotionDuration: 0.7
     hitDelayPerMeter: 0.08
   - radius: 5
     damage: 35
-    cooldown: 10
+    cooldown: 15
     slowMotionScale: 0.1
     slowMotionDuration: 0.7
     hitDelayPerMeter: 0.08
@@ -598,6 +600,48 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &5315263201519612097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5090164919114779854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3412bbe16cd644127bb4b38b0f14ab05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.AbilityCooldownBar
+  slotSize: 96
+  spacing: 24
+  bottomOffset: 64
+  sortingOrder: 21
+  slotColor: {r: 0.12, g: 0.16, b: 0.24, a: 0.92}
+  lockedColor: {r: 0.12, g: 0.12, b: 0.14, a: 0.75}
+  cooldownOverlayColor: {r: 0, g: 0, b: 0, a: 0.65}
+  readyTextColor: {r: 1, g: 1, b: 1, a: 1}
+  lockedTextColor: {r: 0.55, g: 0.55, b: 0.6, a: 1}
+  keyBadgeColor: {r: 0.95, g: 0.8, b: 0.3, a: 1}
+  icons: []
+  readyPopScale: 1.2
+  readyPopSeconds: 0.18
+--- !u!114 &9047818227186524264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5090164919114779854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81e5950aeb7934cee981d628f820db02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.EatStackPanel
+  player: {fileID: 9099370247998457587}
+  panelPrefab: {fileID: 2447204858757176101, guid: bd17fd2e29c164e38a3ca700546dd74f, type: 3}
+  maxColor: {r: 0.45, g: 1, b: 0.55, a: 1}
+  flashColor: {r: 1, g: 0.85, b: 0.3, a: 0.55}
+  flashSeconds: 0.6
 --- !u!1001 &3086742859778399426
 PrefabInstance:
   m_ObjectHideFlags: 0

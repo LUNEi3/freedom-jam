@@ -92,8 +92,8 @@ Resolved **at the moment an enemy's HP reaches 0**, regardless of what dealt the
 - **REQ-HPORB-2** After pickup it hides and reappears after `respawnSeconds` (0 = one use only).
 
 ### 4.9 Objective: The Lost Spaceship
-- **REQ-OBJ-1** At 1:30 of run time (00:30 left on the HUD) the Lost Spaceship appears at a fixed spot on the map and a message tells the player to find it. There is no direction arrow.
-- **REQ-OBJ-2** Reaching it wins the run (Result: **YOU ESCAPED!**). The countdown reaching 00:00 first is a loss (**TIME'S UP**); dying is a loss (**GAME OVER**).
+- **REQ-OBJ-1** The Lost Spaceship is visible at its fixed spot on the map from the start, but only becomes usable at 1:30 of run time (00:30 left on the HUD): a beam switches on and a message says it is ready. There is no direction arrow.
+- **REQ-OBJ-2** Reaching it once it is ready wins the run (Result: **YOU ESCAPED!**); dying is a loss (**GAME OVER**). There is no time-up: at 00:00 the run goes into **overtime** (the HUD timer stays at 00:00 and flashes red) and enemies escalate without limit every 10 s, so the player is forced to escape.
 
 ---
 

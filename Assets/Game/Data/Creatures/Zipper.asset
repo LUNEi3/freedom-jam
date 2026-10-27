@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06ed9dbef59124097ba02117943856af, type: 3}
   m_Name: Zipper
   m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.CreatureData
-  maxHP: 1
-  moveSpeed: 4.5
+  maxHP: 1.5
+  moveSpeed: 3.5
   bodySize: 0.7
   displayName: Zipper
   prefab: {fileID: 6949957070117065916, guid: ebf09c48b0b814825bfb7944f9844c83, type: 3}
-  contactDamage: 0.5
+  contactDamage: 0.7
   contactDamageInterval: 0.8
   xpValue: 1
   scoreValue: 10

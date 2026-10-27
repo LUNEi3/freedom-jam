@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06ed9dbef59124097ba02117943856af, type: 3}
   m_Name: Blob
   m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.CreatureData
-  maxHP: 2
+  maxHP: 3.5
   moveSpeed: 1.8
   bodySize: 1.6
   displayName: Blob
   prefab: {fileID: 6687152740526748734, guid: 17024ebe50b9044c6971f05ef6e88fc6, type: 3}
-  contactDamage: 0.5
+  contactDamage: 0.8
   contactDamageInterval: 1.2
   xpValue: 2
   scoreValue: 10

@@ -21,6 +21,8 @@ namespace FreedomJam.Foundation
         public GameObject resultPopupPrefab;
         public TimerMode timerMode = TimerMode.CountUp;
         [Min(0)] public float countdownSeconds = 60;
+        [Tooltip("Countdown only. Off = the run keeps going after 00:00 (overtime) until the game ends it some other way.")]
+        public bool endRunWhenCountdownEnds = true;
         public int initialScore;
         public string bestScoreKey = "default";
         public int bestScoreDefault;

@@ -315,6 +315,24 @@ namespace FreedomJam.Game.Tests
             Assert.That(SpawnMath.PhaseAt(phases, 5f), Is.Null);
             Assert.That(SpawnMath.MaxAliveAt(phases, 30f, 5f), Is.Zero);
         }
+        [Test] public void OvertimeSteps_CountsFullStepsAfterStart()
+        {
+            Assert.That(SpawnMath.OvertimeSteps(100f, 120f, 10f), Is.Zero);
+            Assert.That(SpawnMath.OvertimeSteps(120f, 120f, 10f), Is.Zero);
+            Assert.That(SpawnMath.OvertimeSteps(129.9f, 120f, 10f), Is.Zero);
+            Assert.That(SpawnMath.OvertimeSteps(130f, 120f, 10f), Is.EqualTo(1));
+            Assert.That(SpawnMath.OvertimeSteps(175f, 120f, 10f), Is.EqualTo(5));
+            Assert.That(SpawnMath.OvertimeSteps(175f, 120f, 0f), Is.Zero);
+        }
+        [Test] public void Escalate_CompoundsHpDamageAndSpeed_KeepsSize()
+        {
+            var phase = new EnemyStatMultipliers { hp = 2f, damage = 2f, speed = 1.2f, size = 1.3f };
+            var same = SpawnMath.Escalate(phase, 0, 1.25f, 1.05f);
+            Assert.That(same.hp, Is.EqualTo(2f)); Assert.That(same.size, Is.EqualTo(1.3f));
+            var two = SpawnMath.Escalate(phase, 2, 1.25f, 1.05f);
+            Assert.That(two.hp, Is.EqualTo(2f * 1.5625f).Within(1e-4)); Assert.That(two.damage, Is.EqualTo(2f * 1.5625f).Within(1e-4));
+            Assert.That(two.speed, Is.EqualTo(1.2f * 1.1025f).Within(1e-4)); Assert.That(two.size, Is.EqualTo(1.3f));
+        }
         [Test] public void PickWeighted_SplitsRollByWeight()
         {
             var weights = new List<float> { 1, 3 };

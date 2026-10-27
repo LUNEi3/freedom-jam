@@ -7,8 +7,13 @@ namespace FreedomJam.Foundation
     {
         public Text scoreLabel;
         public Text timeLabel;
+        [Tooltip("Overtime (countdown at 00:00 but the run goes on): the time label flashes this colour.")]
+        public Color overtimeColor = new Color(1f, 0.25f, 0.2f);
+        [Min(0.05f)] public float overtimeFlashSeconds = 0.5f;
 
         GameFlowController flow;
+        Color normalTimeColor;
+        bool normalTimeColorKnown;
 
         public void Initialize(GameFlowController flow)
         {
@@ -54,6 +59,17 @@ namespace FreedomJam.Foundation
         }
 
         void OnRunUpdated(GameRunData run) => Render(run);
+
+        // Flash in Update (unscaled), so it keeps blinking even when the run is paused or frozen.
+        void Update()
+        {
+            if (timeLabel == null) return;
+            if (!normalTimeColorKnown) { normalTimeColor = timeLabel.color; normalTimeColorKnown = true; }
+            var run = flow != null ? flow.CurrentRun : null;
+            var overtime = run != null && run.IsOvertime && !run.IsComplete;
+            var flashOn = overtime && Mathf.FloorToInt(Time.unscaledTime / overtimeFlashSeconds) % 2 == 0;
+            timeLabel.color = flashOn ? overtimeColor : normalTimeColor;
+        }
 
         void OnStateChanged(GameState _) => Render(flow != null ? flow.CurrentRun : null);
 

@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06ed9dbef59124097ba02117943856af, type: 3}
   m_Name: Gyro
   m_EditorClassIdentifier: FreedomJam.Game::FreedomJam.Game.CreatureData
-  maxHP: 2
-  moveSpeed: 3.5
+  maxHP: 2.5
+  moveSpeed: 3.2
   bodySize: 0.85
   displayName: Gyro
   prefab: {fileID: 6687152740526748734, guid: 63dcde1037105442a909a1a8ae2c64cd, type: 3}
-  contactDamage: 0.75
+  contactDamage: 1
   contactDamageInterval: 0.9
   xpValue: 2
   scoreValue: 10

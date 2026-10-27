@@ -6,6 +6,7 @@ namespace FreedomJam.Game.Pickups
     /// Placed by hand at a fixed spot on the map. Touching it heals the player, then it hides and comes back after
     /// Respawn Seconds (0 = one use only). Ignored while the player is at full HP, so it is never wasted.
     /// </summary>
+    [SelectionBase]
     public sealed class HpOrb : PickupOrb
     {
         [Tooltip("HP restored on pickup (never above max HP).")]

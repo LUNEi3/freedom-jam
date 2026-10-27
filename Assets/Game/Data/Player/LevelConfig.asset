@@ -16,23 +16,32 @@ MonoBehaviour:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 1
-      value: 5
-      inSlope: 0
-      outSlope: 5
+      time: -0.0056381226
+      value: 9.51664
+      inSlope: 1.249535
+      outSlope: 1.249535
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
+      inWeight: 1
       outWeight: 0
     - serializedVersion: 3
-      time: 20
-      value: 100
-      inSlope: 5
+      time: 20.940552
+      value: 169.01585
+      inSlope: 0
       outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
       outWeight: 0
+    - serializedVersion: 3
+      time: 20.98858
+      value: 214.54488
+      inSlope: 4.244354
+      outSlope: 4.244354
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
@@ -62,9 +71,12 @@ MonoBehaviour:
     m_RotationOrder: 4
   statCaps: []
   statGrowth:
-  - label: "MaxHP  +20% per level (level 10 \u2192 \xD72.8)"
+  - label: "MaxHP  +12% per level (level 10 \u2192 \xD72.08)"
     stat: 0
-    perLevel: 0.2
+    perLevel: 0.12
   - label: "BaseDamage  +10% per level (level 10 \u2192 \xD71.9)"
     stat: 3
     perLevel: 0.1
+  - label: "MoveSpeed  +2% per level (level 10 \u2192 \xD71.18)"
+    stat: 1
+    perLevel: 0.02

@@ -10,7 +10,7 @@ namespace FreedomJam.Game
     /// Creatures not listed give XP only. List entries and tiers name themselves in the Inspector.
     /// </summary>
     [CreateAssetMenu(menuName = "Freedom Jam/Eat Stack Config")]
-    public sealed class EatStackConfig : ScriptableObject, IEatStackTable
+    public sealed class EatStackConfig : ScriptableObject, IEatStackTable, IEatStackCreatureList
     {
         [Serializable]
         sealed class CreatureStack
@@ -30,6 +30,21 @@ namespace FreedomJam.Game
         [SerializeField] List<CreatureStack> creatures = new();
 
         Dictionary<CreatureData, IReadOnlyList<EatStackTier>> lookup;
+        List<CreatureData> creatureList;
+
+        /// <summary>Listed creatures in Inspector order, each once.</summary>
+        public IReadOnlyList<CreatureData> Creatures
+        {
+            get
+            {
+                if (creatureList != null) return creatureList;
+                creatureList = new List<CreatureData>();
+                foreach (var entry in creatures)
+                    if (entry != null && entry.Creature != null && !creatureList.Contains(entry.Creature))
+                        creatureList.Add(entry.Creature);
+                return creatureList;
+            }
+        }
 
         public IReadOnlyList<EatStackTier> GetTiers(CreatureData creature)
         {
@@ -47,12 +62,13 @@ namespace FreedomJam.Game
             return result;
         }
 
-        void OnEnable() => lookup = null;
+        void OnEnable() { lookup = null; creatureList = null; }
 
         /// <summary>Names list entries for the Inspector and flags setup mistakes in the names.</summary>
         void OnValidate()
         {
             lookup = null;
+            creatureList = null;
             var seen = new HashSet<CreatureData>();
             foreach (var entry in creatures)
             {

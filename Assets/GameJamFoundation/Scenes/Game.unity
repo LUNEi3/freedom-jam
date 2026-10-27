@@ -1143,6 +1143,63 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -2265921316578523750, guid: 7daa6fc433125d944b8ebcae8f3be835, type: 3}
+--- !u!1001 &198716929
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2023817513955006656, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023817513955006656, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023817513955006656, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 13.84
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023817513955006656, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023817513955006656, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023817513955006656, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023817513955006656, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023817513955006656, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023817513955006656, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023817513955006656, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5316407572390205580, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
+      propertyPath: m_Name
+      value: LostSpaceship
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0525789ca0ad642099cd970ff0a22e9d, type: 3}
 --- !u!1 &203431171 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -2090050986317583783, guid: 7daa6fc433125d944b8ebcae8f3be835, type: 3}
@@ -1368,6 +1425,34 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4484707487916878557, guid: becf332f762d3b94681caca3c81f1c29, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5273224084227276792, guid: becf332f762d3b94681caca3c81f1c29, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6866129329529818680, guid: becf332f762d3b94681caca3c81f1c29, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6866129329529818680, guid: becf332f762d3b94681caca3c81f1c29, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6866129329529818680, guid: becf332f762d3b94681caca3c81f1c29, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6866129329529818680, guid: becf332f762d3b94681caca3c81f1c29, type: 3}
+      propertyPath: m_FontData.m_MinSize
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6866129329529818680, guid: becf332f762d3b94681caca3c81f1c29, type: 3}
+      propertyPath: m_FontData.m_FontSize
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 7733592040643670700, guid: becf332f762d3b94681caca3c81f1c29, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -11910,3 +11995,4 @@ SceneRoots:
   - {fileID: 1777868673}
   - {fileID: 420730640}
   - {fileID: 2099589824}
+  - {fileID: 198716929}
