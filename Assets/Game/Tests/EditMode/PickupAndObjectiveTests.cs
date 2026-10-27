@@ -110,6 +110,35 @@ namespace FreedomJam.Game.Tests
             finally { GameplayEvents.XpCollected -= onXp; }
         }
 
+        [Test] public void AbilityStatus_FractionAndSecondsText()
+        {
+            var cooling = new FreedomJam.Game.Player.AbilityStatus("Dash", "J", 1, 2.5f, 10f);
+            Assert.That(cooling.IsLocked, Is.False); Assert.That(cooling.IsReady, Is.False);
+            Assert.That(cooling.CooldownFraction, Is.EqualTo(0.25f).Within(1e-5));
+            Assert.That(FreedomJam.Game.Player.AbilityStatus.FormatSeconds(3.24f), Is.EqualTo("3.2"));
+            Assert.That(FreedomJam.Game.Player.AbilityStatus.FormatSeconds(12.1f), Is.EqualTo("13"));
+            Assert.That(FreedomJam.Game.Player.AbilityStatus.FormatSeconds(0f), Is.Empty);
+            var locked = new FreedomJam.Game.Player.AbilityStatus("Suck", "K", 0, 0f, 10f);
+            Assert.That(locked.IsLocked, Is.True); Assert.That(locked.IsReady, Is.False);
+        }
+        [Test] public void PlayerAbilities_ReportDashAndSuck_LockedUntilUpgraded()
+        {
+            var go = new GameObject("Abilities");
+            try
+            {
+                var abilities = go.AddComponent<FreedomJam.Game.Player.PlayerAbilityController>();
+                var list = new System.Collections.Generic.List<FreedomJam.Game.Player.AbilityStatus>();
+                abilities.AppendAbilityStatus(list);
+                Assert.That(list.Count, Is.EqualTo(2));
+                Assert.That(list[0].Name, Is.EqualTo("Dash")); Assert.That(list[0].Key, Is.EqualTo("J")); Assert.That(list[0].IsLocked, Is.True);
+                Assert.That(list[1].Name, Is.EqualTo("Suck")); Assert.That(list[1].Key, Is.EqualTo("K")); Assert.That(list[1].IsLocked, Is.True);
+                abilities.TryUpgradeDash(); list.Clear(); abilities.AppendAbilityStatus(list);
+                Assert.That(list[0].Level, Is.EqualTo(1)); Assert.That(list[0].IsReady, Is.True); Assert.That(list[0].Cooldown, Is.EqualTo(10f));
+                Assert.That(list[1].IsLocked, Is.True);
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
         LostSpaceship NewSpaceship(Vector3 at, out GameObject effect)
         {
             orbGo = new GameObject("Spaceship"); orbGo.transform.position = at;

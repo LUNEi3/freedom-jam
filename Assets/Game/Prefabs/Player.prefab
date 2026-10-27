@@ -202,6 +202,7 @@ GameObject:
   - component: {fileID: 6594126807295778653}
   - component: {fileID: 142210374779571676}
   - component: {fileID: 7655617702358377855}
+  - component: {fileID: 7460554510558373923}
   m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
@@ -467,6 +468,32 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7460554510558373923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5090164919114779854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3412bbe16cd644127bb4b38b0f14ab05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FreedomJam.Game.Presentation::FreedomJam.Game.Presentation.AbilityCooldownBar
+  source: {fileID: 6594126807295778653}
+  slotSize: 96
+  spacing: 24
+  bottomOffset: 64
+  sortingOrder: 21
+  slotColor: {r: 0.12, g: 0.16, b: 0.24, a: 0.92}
+  lockedColor: {r: 0.12, g: 0.12, b: 0.14, a: 0.75}
+  cooldownOverlayColor: {r: 0, g: 0, b: 0, a: 0.65}
+  readyTextColor: {r: 1, g: 1, b: 1, a: 1}
+  lockedTextColor: {r: 0.55, g: 0.55, b: 0.6, a: 1}
+  keyBadgeColor: {r: 0.95, g: 0.8, b: 0.3, a: 1}
+  icons: []
+  readyPopScale: 1.2
+  readyPopSeconds: 0.18
 --- !u!1001 &8723500376240363981
 PrefabInstance:
   m_ObjectHideFlags: 0

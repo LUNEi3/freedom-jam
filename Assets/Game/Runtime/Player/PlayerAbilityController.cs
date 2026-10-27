@@ -10,7 +10,7 @@ namespace FreedomJam.Game.Player
     /// <summary>Input, configuration, and upgrade state for the player's active abilities.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerCharacter))]
-    public sealed class PlayerAbilityController : MonoBehaviour, ILevelUpChoiceSource
+    public sealed class PlayerAbilityController : MonoBehaviour, ILevelUpChoiceSource, IAbilityStatusSource
     {
         [Serializable]
         public sealed class DashLevelSettings
@@ -80,6 +80,14 @@ namespace FreedomJam.Game.Player
 
             if (Keyboard.current.jKey.wasPressedThisFrame) ActivateDash();
             if (Keyboard.current.kKey.wasPressedThisFrame) ActivateSuck();
+        }
+
+        /// <summary>Dash and Suck for the ability bar (keys match Update).</summary>
+        public void AppendAbilityStatus(List<AbilityStatus> abilities)
+        {
+            if (abilities == null) return;
+            abilities.Add(new AbilityStatus("Dash", "J", DashLevel, DashLevel > 0 ? DashCooldownRemaining : 0f, DashCooldown));
+            abilities.Add(new AbilityStatus("Suck", "K", SuckLevel, SuckLevel > 0 ? SuckCooldownRemaining : 0f, SuckCooldown));
         }
 
         public bool TryUpgradeDash()
