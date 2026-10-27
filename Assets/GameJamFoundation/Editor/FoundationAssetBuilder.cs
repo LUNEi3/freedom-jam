@@ -186,7 +186,7 @@ namespace FreedomJam.Foundation.Editor
         static void BuildResult(GameObject settingsPrefab)
         {
             var root = CreateCanvas("ResultCanvas", 0);
-            CreateFullBackground(root.transform);
+            var background = CreateFullBackground(root.transform);
             var panel = NewRect("ResultPanel", root.transform);
             SetCentered(panel.GetComponent<RectTransform>(), new Vector2(760f, 760f));
             panel.gameObject.AddComponent<Image>().color = PanelColor;
@@ -204,6 +204,7 @@ namespace FreedomJam.Foundation.Editor
 
             var controller = root.AddComponent<ResultMenuController>();
             controller.titleLabel = title;
+            controller.popupBackground = background;
             controller.scoreLabel = score;
             controller.bestScoreLabel = best;
             controller.timeLabel = time;
@@ -358,13 +359,14 @@ namespace FreedomJam.Foundation.Editor
             return root;
         }
 
-        static void CreateFullBackground(Transform parent)
+        static Image CreateFullBackground(Transform parent)
         {
             var background = NewRect("Background", parent);
             StretchToParent(background.GetComponent<RectTransform>());
             var image = background.gameObject.AddComponent<Image>();
             image.color = BackgroundColor;
             image.raycastTarget = false;
+            return image;
         }
 
         static GameObject InstantiateNested(GameObject prefab, Transform parent)

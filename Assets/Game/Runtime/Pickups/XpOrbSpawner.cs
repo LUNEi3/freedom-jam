@@ -4,7 +4,7 @@ using UnityEngine.Pool;
 
 namespace FreedomJam.Game.Pickups
 {
-    /// <summary>Drops a pooled XP orb wherever a creature is killed outside the mouth (MVP REQ-XP-1).</summary>
+    /// <summary>Drops a pooled XP orb wherever a creature dies, eaten or killed; the player must touch it to collect (MVP REQ-XP-1).</summary>
     public sealed class XpOrbSpawner : MonoBehaviour
     {
         [SerializeField] XpOrb orbPrefab;
@@ -22,11 +22,11 @@ namespace FreedomJam.Game.Pickups
             release = pool.Release;
         }
 
-        void OnEnable() => GameplayEvents.CreatureKilled += OnCreatureKilled;
-        void OnDisable() => GameplayEvents.CreatureKilled -= OnCreatureKilled;
+        void OnEnable() => GameplayEvents.CreatureDied += OnCreatureDied;
+        void OnDisable() => GameplayEvents.CreatureDied -= OnCreatureDied;
         void OnDestroy() => pool?.Dispose();
 
-        void OnCreatureKilled(CreatureData creature, Vector3 position)
+        void OnCreatureDied(CreatureData creature, Vector3 position)
         {
             if (orbPrefab == null || creature == null || creature.xpValue <= 0) return;
             pool.Get().Drop(position, creature.xpValue, release);

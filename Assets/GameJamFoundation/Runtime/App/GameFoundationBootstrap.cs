@@ -57,12 +57,21 @@ namespace FreedomJam.Foundation
                 QuitBuiltApplication,
                 () => Time.timeScale);
             Flow.StateChanged += InputController.SetGameplayState;
+            Flow.ResultShown += EnsureResultPopup;
             Audio = new AudioService();
         }
 
         void Start()
         {
             if (Audio != null) Audio.Initialize(audioMixer, CurrentSettings);
+        }
+
+        /// <summary>Popup mode: if the Game scene has no result popup placed in it, spawn one from GameConfig.</summary>
+        void EnsureResultPopup()
+        {
+            if (config.resultDisplay != ResultDisplay.Popup || config.resultPopupPrefab == null) return;
+            if (FindAnyObjectByType<ResultMenuController>() != null) return;
+            Instantiate(config.resultPopupPrefab);
         }
 
         void Update()

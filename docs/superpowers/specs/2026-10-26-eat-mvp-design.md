@@ -75,7 +75,7 @@ Resolved **at the moment an enemy's HP reaches 0**, regardless of what dealt the
 ### 4.5 Player health
 - **REQ-HP-1** Player has `maxHP` and a hurtbox. Enemy hits reduce HP.
 - **REQ-HP-2** Short invulnerability window after being hit (`hitInvulnerability` seconds, tunable; may be 0).
-- **REQ-HP-3** At 0 HP the run ends: call `GameFoundationBootstrap.Instance.Flow.FinishRun()` (loads Result scene, saves best score).
+- **REQ-HP-3** At 0 HP the run ends: call `GameFoundationBootstrap.Instance.Flow.FinishRun()` (saves best score; with `GameConfig.resultDisplay = Popup` the game keeps running for `resultPopupDelay` (1 s), then freezes and shows the Game scene's result popup — no scene change).
 
 ### 4.6 Spawning & scaling difficulty
 - **REQ-SPAWN-1** Enemies spawn off-screen in a ring around the player, from an object pool.
@@ -83,9 +83,17 @@ Resolved **at the moment an enemy's HP reaches 0**, regardless of what dealt the
 - **REQ-SPAWN-3** Enemies too far behind the player are recycled to keep density near the player (player can't turn around quickly).
 
 ### 4.7 XP orbs
-- **REQ-XP-1** Killed (not eaten) enemies drop an XP orb carrying the creature's `xpValue`.
-- **REQ-XP-2** Orbs are collected on contact with the player, optionally pulled in within `pickupRadius` (player stat).
+- **REQ-XP-1** Every enemy death — eaten or killed — drops an XP orb carrying the creature's `xpValue`. Eating gives no XP directly; the player has to pick the orb up.
+- **REQ-XP-2** Orbs are collected when they touch the player's body, and pulled in within `pickupRadius` (player stat, 0.75 by default, so the player has to steer over them).
 - **REQ-XP-3** Orbs are pooled.
+
+### 4.8 HP orbs
+- **REQ-HPORB-1** HP orbs are placed by hand at fixed spots on the map (not dropped). Touching one heals `healAmount` (never above max HP); it is ignored while the player is at full HP.
+- **REQ-HPORB-2** After pickup it hides and reappears after `respawnSeconds` (0 = one use only).
+
+### 4.9 Objective: The Lost Spaceship
+- **REQ-OBJ-1** At 1:30 of run time (00:30 left on the HUD) the Lost Spaceship appears at a fixed spot on the map and a message tells the player to find it. There is no direction arrow.
+- **REQ-OBJ-2** Reaching it wins the run (Result: **YOU ESCAPED!**). The countdown reaching 00:00 first is a loss (**TIME'S UP**); dying is a loss (**GAME OVER**).
 
 ---
 
@@ -195,5 +203,5 @@ Designed so each track touches separate folders/prefabs to avoid merge conflicts
 - XP curve and level caps values.
 - Ability list beyond Dash; choice count on level-up (default 3).
 - Should eating ever be gated by size later (eat smaller, avoid bigger)?
-- Win condition for "Apex Predator" (time survived, level reached, boss?).
+- ~~Win condition~~ — decided: reach the Lost Spaceship in the last 30 s (§4.9).
 - Fixed camera angle/height values.

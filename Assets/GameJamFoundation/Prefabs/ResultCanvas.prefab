@@ -1503,6 +1503,9 @@ MonoBehaviour:
   quitButton: {fileID: 686216379085239769}
   settingsMenu: {fileID: 6416048040759174905}
   defaultSelection: {fileID: 6856972951003135421}
+  popupBackground: {fileID: 1367939613423805921}
+  popupBackgroundAlpha: 0.6
+  popupSortingOrder: 100
 --- !u!1 &8132218010845844339
 GameObject:
   m_ObjectHideFlags: 0

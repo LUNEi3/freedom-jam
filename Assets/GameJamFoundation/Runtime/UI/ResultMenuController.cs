@@ -7,8 +7,9 @@ namespace FreedomJam.Foundation
 {
     public sealed class ResultMenuController : MonoBehaviour
     {
-        public const string WonTitle = "YOU SURVIVED!";
+        public const string WonTitle = "YOU ESCAPED!";
         public const string LostTitle = "GAME OVER";
+        public const string TimeUpTitle = "TIME'S UP";
 
         public Text titleLabel;
         public Text scoreLabel;
@@ -20,12 +21,21 @@ namespace FreedomJam.Foundation
         public Button quitButton;
         public SettingsMenuController settingsMenu;
         public Selectable defaultSelection;
+        [Tooltip("Popup mode: this full-screen background is dimmed so the frozen game shows through.")]
+        public Graphic popupBackground;
+        [Range(0f, 1f)] public float popupBackgroundAlpha = 0.6f;
+        [Tooltip("Popup mode: canvas sorting order, above the HUD and other overlays.")]
+        public int popupSortingOrder = 100;
 
         GameFlowController flow;
         SettingsStore store;
         Action openSettings;
         bool initialized;
         bool listenersBound;
+        CanvasGroup popupGroup;
+
+        /// <summary>Popup mode (GameConfig.resultDisplay): this lives in the Game scene and stays hidden until the run's result is shown.</summary>
+        bool IsPopup => flow != null && flow.Config != null && flow.Config.resultDisplay == ResultDisplay.Popup;
 
         public void Initialize(GameFlowController flow, SettingsStore store, Action openSettings)
         {
@@ -33,6 +43,7 @@ namespace FreedomJam.Foundation
             {
                 this.flow.RunUpdated -= OnRunUpdated;
                 this.flow.StateChanged -= OnStateChanged;
+                this.flow.ResultShown -= OnResultShown;
             }
             this.flow = flow;
             this.store = store;
@@ -42,10 +53,22 @@ namespace FreedomJam.Foundation
             {
                 this.flow.RunUpdated += OnRunUpdated;
                 this.flow.StateChanged += OnStateChanged;
+                this.flow.ResultShown += OnResultShown;
             }
             BindListeners();
             Render();
-            SelectDefault();
+            if (IsPopup) ApplyPopupLook();
+            UpdatePopupVisibility();
+            if (!IsPopup || IsPopupVisible) SelectDefault();
+        }
+
+        void Awake()
+        {
+            // Hide before the first frame when this is the Game scene's result popup.
+            var bootstrap = GameFoundationBootstrap.Instance;
+            if (bootstrap != null && bootstrap.Flow != null && bootstrap.Flow.Config != null &&
+                bootstrap.Flow.Config.resultDisplay == ResultDisplay.Popup)
+                SetPopupVisible(false);
         }
 
         void Start()
@@ -72,14 +95,55 @@ namespace FreedomJam.Foundation
 
         void OnRunUpdated(GameRunData _) => Render();
 
-        void OnStateChanged(GameState _) => Render();
+        void OnStateChanged(GameState _)
+        {
+            Render();
+            UpdatePopupVisibility();
+        }
+
+        void OnResultShown()
+        {
+            Render();
+            UpdatePopupVisibility();
+            SelectDefault();
+        }
+
+        bool IsPopupVisible => flow != null && flow.State == GameState.Result && flow.IsResultShown;
+
+        void UpdatePopupVisibility()
+        {
+            if (IsPopup) SetPopupVisible(IsPopupVisible);
+        }
+
+        void ApplyPopupLook()
+        {
+            var canvas = GetComponent<Canvas>();
+            if (canvas != null) canvas.sortingOrder = Mathf.Max(canvas.sortingOrder, popupSortingOrder);
+            if (popupBackground == null) return;
+            var color = popupBackground.color;
+            color.a = popupBackgroundAlpha;
+            popupBackground.color = color;
+        }
+
+        void SetPopupVisible(bool visible)
+        {
+            if (popupGroup == null)
+            {
+                // Not ??: in the Editor a missing component comes back as a "fake null" object.
+                popupGroup = GetComponent<CanvasGroup>();
+                if (popupGroup == null) popupGroup = gameObject.AddComponent<CanvasGroup>();
+            }
+            popupGroup.alpha = visible ? 1f : 0f;
+            popupGroup.interactable = visible;
+            popupGroup.blocksRaycasts = visible;
+        }
 
         void Render()
         {
             if (flow == null || flow.CurrentRun == null) return;
             var run = flow.CurrentRun;
             if (titleLabel != null && run.Outcome != RunOutcome.None)
-                titleLabel.text = run.Outcome == RunOutcome.Won ? WonTitle : LostTitle;
+                titleLabel.text = run.Outcome == RunOutcome.Won ? WonTitle : run.Outcome == RunOutcome.TimeUp ? TimeUpTitle : LostTitle;
             if (scoreLabel != null) scoreLabel.text = run.Score.ToString();
             if (timeLabel != null) timeLabel.text = FormatTime(run.ElapsedSeconds);
             if (bestScoreLabel != null && store != null)
@@ -92,6 +156,7 @@ namespace FreedomJam.Foundation
             {
                 flow.RunUpdated += OnRunUpdated;
                 flow.StateChanged += OnStateChanged;
+                flow.ResultShown += OnResultShown;
             }
             BindListeners();
         }
@@ -103,6 +168,7 @@ namespace FreedomJam.Foundation
             {
                 flow.RunUpdated -= OnRunUpdated;
                 flow.StateChanged -= OnStateChanged;
+                flow.ResultShown -= OnResultShown;
             }
         }
 
@@ -111,6 +177,7 @@ namespace FreedomJam.Foundation
             if (flow == null) return;
             flow.RunUpdated -= OnRunUpdated;
             flow.StateChanged -= OnStateChanged;
+            flow.ResultShown -= OnResultShown;
         }
 
         void BindListeners()

@@ -29,20 +29,28 @@ namespace FreedomJam.Foundation.Tests
             Assert.That(run.ElapsedSeconds, Is.EqualTo(10)); Assert.That(run.Advance(5), Is.False);
             Assert.That(run.ElapsedSeconds, Is.EqualTo(10));
         }
-        [Test] public void Countdown_Expiry_IsWon()
+        [Test] public void Countdown_Expiry_IsTimeUp()
         {
             config.timerMode = TimerMode.Countdown; config.countdownSeconds = 10;
             var run = new GameRunData(config);
             run.Advance(9); Assert.That(run.Outcome, Is.EqualTo(RunOutcome.None));
-            run.Advance(1); Assert.That(run.Outcome, Is.EqualTo(RunOutcome.Won));
+            run.Advance(1); Assert.That(run.Outcome, Is.EqualTo(RunOutcome.TimeUp));
+        }
+        [Test] public void Countdown_Expiry_ReportsExactCountdownAsElapsed()
+        {
+            config.timerMode = TimerMode.Countdown; config.countdownSeconds = 120;
+            var run = new GameRunData(config);
+            for (var i = 0; i < 7200; i++) run.Advance(1f / 60f);   // float drift leaves it a hair short
+            run.Advance(1f);
+            Assert.That(run.Outcome, Is.EqualTo(RunOutcome.TimeUp)); Assert.That(run.ElapsedSeconds, Is.EqualTo(120f));
         }
         [Test] public void Complete_KeepsFirstOutcome()
         {
             config.timerMode = TimerMode.Countdown; config.countdownSeconds = 10;
-            var won = new GameRunData(config); won.Advance(10); won.Complete(RunOutcome.Lost);
-            Assert.That(won.Outcome, Is.EqualTo(RunOutcome.Won));
-            var lost = new GameRunData(config); lost.Complete(RunOutcome.Lost); lost.Advance(10);
-            Assert.That(lost.Outcome, Is.EqualTo(RunOutcome.Lost)); Assert.That(lost.ElapsedSeconds, Is.Zero);
+            var timeUp = new GameRunData(config); timeUp.Advance(10); timeUp.Complete(RunOutcome.Won);
+            Assert.That(timeUp.Outcome, Is.EqualTo(RunOutcome.TimeUp));
+            var won = new GameRunData(config); won.Complete(RunOutcome.Won); won.Advance(10); won.Complete(RunOutcome.Lost);
+            Assert.That(won.Outcome, Is.EqualTo(RunOutcome.Won)); Assert.That(won.ElapsedSeconds, Is.Zero);
         }
         [Test] public void AddScore_AllowsNegativeDelta()
         {

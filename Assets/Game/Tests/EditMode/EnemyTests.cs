@@ -119,6 +119,22 @@ namespace FreedomJam.Game.Tests
             }
             finally { GameplayEvents.CreatureEaten -= onEaten; GameplayEvents.CreatureKilled -= onKilled; }
         }
+        [Test] public void Dying_EatenOrKilled_RaisesCreatureDiedAtPosition()
+        {
+            var died = 0; var at = Vector3.zero;
+            System.Action<CreatureData, Vector3> onDied = (_, p) => { died++; at = p; };
+            GameplayEvents.CreatureDied += onDied;
+            try
+            {
+                player.inMouth = true; go.transform.position = new Vector3(1, 0, 2);
+                enemy.Initialize(creature, null); enemy.TakeDamage(Hit(99));
+                Assert.That(died, Is.EqualTo(1)); Assert.That(at, Is.EqualTo(new Vector3(1, 0, 2)));
+                go.SetActive(true); player.inMouth = false;
+                enemy.Initialize(creature, null); enemy.TakeDamage(Hit(99));
+                Assert.That(died, Is.EqualTo(2));
+            }
+            finally { GameplayEvents.CreatureDied -= onDied; }
+        }
         [Test] public void NonLethalDamage_DoesNotRelease()
         {
             enemy.Initialize(creature, _ => released++); enemy.TakeDamage(Hit(2));

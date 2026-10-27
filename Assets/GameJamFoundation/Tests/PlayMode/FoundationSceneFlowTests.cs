@@ -207,7 +207,7 @@ namespace FreedomJam.Foundation.Tests
             Object.FindAnyObjectByType<MainMenuController>().playButton.onClick.Invoke();
             yield return WaitForScene("Game");
             bootstrap.Flow.FinishRun();
-            yield return WaitForScene("Result");
+            yield return WaitForResult(bootstrap);
             var result = Object.FindAnyObjectByType<ResultMenuController>();
             result.OnSettingsClicked();
             Assert.That(result.settingsMenu.gameObject.activeSelf, Is.True);
@@ -236,6 +236,10 @@ namespace FreedomJam.Foundation.Tests
 
             var bootstrap = GameFoundationBootstrap.Instance;
             Assert.That(bootstrap, Is.Not.Null);
+            // The best score persists on this machine, so expect max(saved best, 42) rather than exactly 42.
+            var config = bootstrap.Flow.Config;
+            var bestBefore = bootstrap.SettingsStore.LoadBestScore(config.bestScoreKey, config.bestScoreDefault, config.scoreDirection);
+            var expectedBest = config.scoreDirection == ScoreDirection.HigherIsBetter ? Mathf.Max(bestBefore, 42) : Mathf.Min(bestBefore, 42);
             var menu = Object.FindAnyObjectByType<MainMenuController>();
             Assert.That(menu, Is.Not.Null);
             menu.playButton.onClick.Invoke();
@@ -246,13 +250,18 @@ namespace FreedomJam.Foundation.Tests
             bootstrap.Flow.AddScore(42);
             bootstrap.Flow.Tick(65f);
             bootstrap.Flow.FinishRun();
-            yield return WaitForScene("Result");
+            yield return WaitForResult(bootstrap);
 
             var result = Object.FindAnyObjectByType<ResultMenuController>();
             Assert.That(result, Is.Not.Null);
             Assert.That(result.scoreLabel.text, Is.EqualTo("42"));
-            Assert.That(result.bestScoreLabel.text, Is.EqualTo("42"));
+            Assert.That(result.bestScoreLabel.text, Is.EqualTo(expectedBest.ToString()));
             Assert.That(result.timeLabel.text, Is.EqualTo("01:05"));
+            if (config.resultDisplay == ResultDisplay.Popup)
+            {
+                Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Game"));
+                Assert.That(Time.timeScale, Is.EqualTo(0f));
+            }
 
             result.playAgainButton.onClick.Invoke();
             Assert.That(bootstrap.Flow.State, Is.EqualTo(GameState.Playing));
@@ -284,6 +293,23 @@ namespace FreedomJam.Foundation.Tests
             Assert.That(operation, Is.Not.Null, "Scene must be available in Build Settings: " + sceneName);
             if (operation != null)
                 while (!operation.isDone) yield return null;
+            yield return null;
+        }
+
+        /// <summary>Result scene (Scene mode) or the in-game result popup (Popup mode, after its delay).</summary>
+        static IEnumerator WaitForResult(GameFoundationBootstrap bootstrap)
+        {
+            if (bootstrap.Flow.Config.resultDisplay != ResultDisplay.Popup)
+            {
+                yield return WaitForScene("Result");
+                yield break;
+            }
+            var giveUpAt = Time.realtimeSinceStartup + bootstrap.Flow.Config.resultPopupDelay + 5f;
+            while (!bootstrap.Flow.IsResultShown)
+            {
+                if (Time.realtimeSinceStartup > giveUpAt) Assert.Fail("Timed out waiting for the result popup.");
+                yield return null;
+            }
             yield return null;
         }
 
