@@ -11,7 +11,7 @@ namespace FreedomJam.Game.Player
     /// <summary>Level-based area attack with a short slow-motion windup.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerCharacter))]
-    public sealed class ExplosionAbility : MonoBehaviour, ILevelUpChoiceSource
+    public sealed class ExplosionAbility : MonoBehaviour, ILevelUpChoiceSource, IAbilityStatusSource
     {
         [Serializable]
         public sealed class ExplosionLevelSettings
@@ -48,6 +48,15 @@ namespace FreedomJam.Game.Player
         public int Level => level;
         public float CooldownRemaining => Mathf.Max(0f, readyAt - Time.time);
         public bool CanUpgrade => GetSettings(level + 1) != null;
+
+        /// <summary>Explosion for the ability bar (key matches Update).</summary>
+        public void AppendAbilityStatus(List<AbilityStatus> abilities)
+        {
+            if (abilities == null) return;
+            var settings = GetSettings(level);
+            abilities.Add(new AbilityStatus("Explosion", "L", level, level > 0 ? CooldownRemaining : 0f,
+                settings != null ? Mathf.Max(0f, settings.cooldown) : 0f));
+        }
 
         void Awake()
         {

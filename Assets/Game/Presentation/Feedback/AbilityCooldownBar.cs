@@ -13,8 +13,6 @@ namespace FreedomJam.Game.Presentation
     [DisallowMultipleComponent]
     public sealed class AbilityCooldownBar : MonoBehaviour
     {
-        [Tooltip("Reports the abilities. Defaults to an IAbilityStatusSource on this object (PlayerAbilityController).")]
-        [SerializeField] MonoBehaviour source;
 
         [Header("Layout (reference 1920 x 1080)")]
         [SerializeField, Min(16f)] float slotSize = 96f;
@@ -53,7 +51,8 @@ namespace FreedomJam.Game.Presentation
 
         readonly List<AbilityStatus> abilities = new List<AbilityStatus>(4);
         readonly List<Slot> slots = new List<Slot>(4);
-        IAbilityStatusSource statusSource;
+        // Every ability component on this object that reports status (Dash/Suck, Explosion, …), in component order.
+        IAbilityStatusSource[] statusSources;
         Canvas canvas;
         RectTransform row;
         Font font;
@@ -61,9 +60,8 @@ namespace FreedomJam.Game.Presentation
 
         void Awake()
         {
-            statusSource = source as IAbilityStatusSource;
-            if (statusSource == null) statusSource = GetComponent<IAbilityStatusSource>();
-            if (statusSource == null) Debug.LogWarning("AbilityCooldownBar has no IAbilityStatusSource, so it shows nothing.", this);
+            statusSources = GetComponents<IAbilityStatusSource>();
+            if (statusSources.Length == 0) Debug.LogWarning("AbilityCooldownBar found no IAbilityStatusSource on this object, so it shows nothing.", this);
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             whiteSprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f));
             BuildCanvas();
@@ -77,9 +75,9 @@ namespace FreedomJam.Game.Presentation
 
         void LateUpdate()
         {
-            if (statusSource == null || canvas == null) return;
+            if (statusSources == null || statusSources.Length == 0 || canvas == null) return;
             abilities.Clear();
-            statusSource.AppendAbilityStatus(abilities);
+            foreach (var source in statusSources) source.AppendAbilityStatus(abilities);
             while (slots.Count < abilities.Count) slots.Add(CreateSlot(slots.Count));
             for (var i = 0; i < slots.Count; i++)
             {
