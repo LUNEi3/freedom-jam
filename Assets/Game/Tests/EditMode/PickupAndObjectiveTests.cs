@@ -139,6 +139,18 @@ namespace FreedomJam.Game.Tests
             finally { Object.DestroyImmediate(go); }
         }
 
+        [Test] public void Compass_FlatDirectionIgnoresHeight()
+        {
+            Assert.That(CompassMath.TryGetFlatDirection(new Vector3(1, 0, 1), new Vector3(1, 5, 4), out var dir, out var dist), Is.True);
+            Assert.That(dir, Is.EqualTo(Vector3.forward)); Assert.That(dist, Is.EqualTo(3f).Within(1e-5));
+            Assert.That(CompassMath.TryGetFlatDirection(Vector3.zero, new Vector3(0, 3, 0), out _, out _), Is.False);
+        }
+        [Test] public void Compass_PointOnCircle()
+        {
+            var p = CompassMath.PointOnCircle(new Vector3(2, 1, 0), Vector3.right, 2.5f, 0.05f);
+            Assert.That(p.x, Is.EqualTo(4.5f).Within(1e-5)); Assert.That(p.y, Is.EqualTo(1.05f).Within(1e-5)); Assert.That(p.z, Is.Zero);
+        }
+
         LostSpaceship NewSpaceship(Vector3 at, out GameObject effect)
         {
             orbGo = new GameObject("Spaceship"); orbGo.transform.position = at;

@@ -611,6 +611,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7246076727031196086, guid: a4565b9c3c55eae4e9b45df946a317e7, type: 3}
+      propertyPath: m_Text
+      value: GULPIE SURVIVORS
+      objectReference: {fileID: 0}
     - target: {fileID: 7553711566629973352, guid: a4565b9c3c55eae4e9b45df946a317e7, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -642,6 +646,10 @@ PrefabInstance:
     - target: {fileID: 7553711566629973352, guid: a4565b9c3c55eae4e9b45df946a317e7, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7900905010877601078, guid: a4565b9c3c55eae4e9b45df946a317e7, type: 3}
+      propertyPath: m_Text
+      value: Cute Action Roguelike
       objectReference: {fileID: 0}
     - target: {fileID: 7919909679334688862, guid: a4565b9c3c55eae4e9b45df946a317e7, type: 3}
       propertyPath: m_Name
